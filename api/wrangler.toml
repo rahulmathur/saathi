@@ -1,0 +1,25 @@
+name = "saathi-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "saathi"
+database_id = "ac5ca51c-c6e8-4f47-992d-d67814057132"
+migrations_dir = "migrations"
+
+[vars]
+# "true" returns sign-in codes in the API response so the app can be tried
+# without an email provider. Set to "false" before real users sign up.
+DEV_MODE = "true"
+# "mock" simulates flight status from the journey; "flightaware" uses AeroAPI
+# (needs the FLIGHTAWARE_API_KEY secret).
+FLIGHT_PROVIDER = "mock"
+EMAIL_FROM = "Saathi <hello@saathi.travel>"
+
+# Secrets (set with `wrangler secret put NAME`), all optional:
+#   RESEND_API_KEY      sends sign-in codes by email
+#   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM
+#                       sends WhatsApp alerts to families
+#   FLIGHTAWARE_API_KEY live flight status
+#   ADMIN_TOKEN         protects /admin (survey results and story approval)

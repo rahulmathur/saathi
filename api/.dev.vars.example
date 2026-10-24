@@ -1,0 +1,2 @@
+# Copy to .dev.vars for local development (wrangler dev reads it).
+ADMIN_TOKEN=choose-a-long-random-string

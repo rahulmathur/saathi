@@ -1,0 +1,25 @@
+{
+  "name": "saathi-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply saathi --local",
+    "db:migrate:remote": "wrangler d1 migrations apply saathi --remote",
+    "db:seed:local": "wrangler d1 execute saathi --local --file=./seed/sample.sql",
+    "db:seed:remote": "wrangler d1 execute saathi --remote --file=./seed/sample.sql",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "hono": "^4.13.13"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261024.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.152.0"
+  }
+}

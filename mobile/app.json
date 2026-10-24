@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Saathi",
+    "slug": "saathi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "saathi",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.rmsolutionsgroup.saathi",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.rmsolutionsgroup.saathi",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1C2B4F",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 96
+        }
+      ],
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": true
+    },
+    "description": "Find trusted company for your parents' flights and follow every step of their journey."
+  }
+}
