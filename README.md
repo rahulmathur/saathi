@@ -35,11 +35,12 @@ npm run dev
 npm test                     # unit tests (booking-email parser, matching)
 node scripts/smoke.mjs       # 40 end-to-end checks against the running API
 
-# Mobile app
+# Mobile app (uses the live API by default)
 cd ../mobile
 npm install
-EXPO_PUBLIC_API_URL=http://<your-computer-ip>:8787 npx expo start
+npx expo start
 # Scan the QR code with the Expo Go app on your phone.
+# To use a local API instead: EXPO_PUBLIC_API_URL=http://<your-computer-ip>:8787 npx expo start
 
 # Website
 cd ../web
@@ -65,7 +66,9 @@ cd api && npx wrangler deploy     # API
 cd ../web && npx wrangler deploy  # website
 ```
 
-**Survey results and messages** (send `Authorization: Bearer $ADMIN_TOKEN`):
+**Results page:** https://saathi.rahul-mathur.workers.dev/results shows survey charts, written comments, contact messages (mark them answered), stories (publish them) and the early-access list, with spreadsheet downloads. It asks for the admin password and isn't linked from the site or listed in search engines.
+
+The same data is available directly from the API (send `Authorization: Bearer $ADMIN_TOKEN`):
 - `https://saathi-api.rahul-mathur.workers.dev/admin/survey/summary` gives survey counts, and `/admin/survey/export.csv` gives a spreadsheet.
 - `/admin/messages` lists unanswered contact-form messages. Mark one done with `POST /admin/messages/<id>/handled`.
 - `/admin/stories` lists submitted stories. Publish one with `POST /admin/stories/<id>/approve`. To choose your own admin password: `cd api && npx wrangler secret put ADMIN_TOKEN`.

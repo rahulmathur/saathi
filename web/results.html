@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Saathi Results</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 4px; }
+  .tile .n { font-size: 36px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .tile .l { font-size: 15px; color: var(--muted); }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs button { min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1.5px solid var(--line-strong); background: #fff; font: inherit; font-size: 16px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 700; }
+  .q-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  @media (max-width: 400px) { .q-grid { grid-template-columns: 1fr; } }
+  .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; font-size: 15px; }
+  .bar-track { grid-column: 1 / -1; height: 10px; border-radius: 5px; background: var(--ground); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 5px; background: var(--navy); }
+  .bar-row .v { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rating { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 6px 12px; align-items: center; font-size: 15px; }
+  .rating .avg { font-weight: 700; color: var(--navy); text-align: right; font-variant-numeric: tabular-nums; }
+  .item { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 8px; }
+  .item .meta { font-size: 14px; color: var(--muted); }
+  .item p { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .empty { color: var(--muted); padding: 8px 0; }
+  table.list { width: 100%; border-collapse: collapse; background: var(--card); font-size: 15px; }
+  table.list th, table.list td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  table.list th { background: var(--ground); font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Saathi home">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="13" cy="17" r="10" fill="#1C2B4F"/><circle cx="21" cy="17" r="10" fill="#F4A62A" fill-opacity=".92"/></svg>
+      Saathi results
+    </a>
+    <button class="btn small outline" id="signout" type="button" hidden>Lock</button>
+  </div>
+</header>
+
+<main class="section" style="padding-top: 32px">
+  <div class="wrap stack" style="gap: 24px">
+
+    <form id="login" class="card form" style="max-width: 460px" novalidate>
+      <h1 style="font-size: 30px">Team results</h1>
+      <p class="muted">Enter the admin password to see survey results, messages, stories and early-access sign-ups.</p>
+      <div class="field"><label for="pw">Admin password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <div><button class="btn" type="submit">Open results</button></div>
+      <div class="notice" role="alert" hidden></div>
+    </form>
+
+    <div id="app" class="stack" style="gap: 24px" hidden>
+      <div class="tiles" id="tiles"></div>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="survey" aria-selected="true">Survey</button>
+        <button role="tab" data-tab="comments" aria-selected="false">Comments</button>
+        <button role="tab" data-tab="messages" aria-selected="false">Messages</button>
+        <button role="tab" data-tab="stories" aria-selected="false">Stories</button>
+        <button role="tab" data-tab="waitlist" aria-selected="false">Early access</button>
+      </div>
+
+      <section data-panel="survey" class="stack" style="gap: 16px">
+        <div class="btn-row"><button class="btn small outline" id="dl-survey" type="button">Download survey spreadsheet</button><button class="btn small outline" id="refresh" type="button">Refresh</button></div>
+        <div class="card" id="ratings-card"><h3>How useful is each feature? <span class="muted small">(average, 1–5)</span></h3><div class="rating" id="ratings"></div></div>
+        <div class="q-grid" id="questions"></div>
+      </section>
+      <section data-panel="comments" class="stack" hidden><div id="comments" class="stack"></div></section>
+      <section data-panel="messages" class="stack" hidden>
+        <label class="check"><input type="checkbox" id="show-handled"> Show answered messages too</label>
+        <div id="messages" class="stack"></div>
+      </section>
+      <section data-panel="stories" class="stack" hidden><div id="stories" class="stack"></div></section>
+      <section data-panel="waitlist" class="stack" hidden>
+        <div><button class="btn small outline" id="dl-waitlist" type="button">Download early-access list</button></div>
+        <div class="table-scroll"><table class="list"><thead><tr><th>Email</th><th>Phone</th><th>Who</th><th>From</th><th>Joined</th></tr></thead><tbody id="waitlist"></tbody></table></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  var override = new URLSearchParams(location.search).get('api');
+  var API = (override || window.SAATHI_API || '').replace(/\/$/, '');
+  var KEY = 'saathi.admin';
+  var token = null;
+  try { token = sessionStorage.getItem(KEY); } catch (e) {}
+
+  var LABELS = {
+    role: ['Who answered', { family: 'Family member', traveller: 'Senior traveller', helper: 'Could help someone', other: 'Other' }],
+    lives_in: ['Where they live', {}],
+    parent_frequency: ['How often their parent flies alone', { not_yet: 'Not yet, but may', every_few_years: 'Every few years', yearly: 'About once a year', '2_plus': 'Twice a year or more' }],
+    parent_age: ["Parent's age", { under_60: 'Under 60', '60_69': '60–69', '70_79': '70–79', '80_plus': '80 or older' }],
+    worries: ['Biggest worries', { layovers: 'Connections and layovers', immigration: 'Immigration and forms', language: 'Language', health: 'Health or medicines', wheelchair: 'Wheelchair not turning up', getting_lost: 'Getting lost in the airport', no_news: 'Not knowing where they are', delays: 'Delays and missed flights', loneliness: 'Being alone for so long' }],
+    current_solution: ['How they find company today', { social_groups: 'Facebook or WhatsApp groups', friends: 'Friends and relatives', companion_site: 'A companion website or app', airline_assist: 'Airline assistance', paid_escort: 'A paid escort', someone_flies: 'One of us flies with them', nothing: 'They travel alone' }],
+    tried_competitor: ['Tried a companion site before', { no: 'No', worked: 'Yes, it worked', no_match: 'Yes, found no one', no_trust: "Yes, didn't trust it" }],
+    comfort_alone: ['Seniors: flying alone feels', { very_nervous: 'Very nervous', a_bit_nervous: 'A bit nervous', fine: 'Fine', enjoy_it: 'They enjoy it' }],
+    smartphone: ['Seniors: use a smartphone', { comfortable: 'Yes, comfortably', a_little: 'Yes, a little', no: 'No' }],
+    helper_frequency: ['Helpers: how often they fly', { yearly: 'About once a year', '2_3': '2–3 times a year', '4_plus': '4 or more' }],
+    would_help: ["Helpers: would keep an eye on a parent", { yes_free: 'Yes, happily', yes_thanks: 'Yes, for a small thank-you', maybe: 'Maybe, after meeting the family', no: 'Probably not' }],
+    languages: ['Languages wanted', {}],
+    trust: ['What would build trust', { id_check: 'Government ID check', community: 'Community vouching', video_call: 'Video call first', reviews: 'Reviews', same_region: 'Same region or language', same_gender: 'Same-gender option', never: "Wouldn't trust a stranger" }],
+    would_use: ['Would use Saathi', { definitely: 'Definitely', probably: 'Probably', not_sure: 'Not sure', probably_not: 'Probably not' }],
+    pay: ['Would pay per trip', { free_only: 'Only if free', up_to_5: 'Up to $5', '5_15': '$5–15', '15_30': '$15–30', more_for_helper: 'More, for a verified helper' }],
+  };
+  var ORDER = ['would_use', 'pay', 'worries', 'current_solution', 'trust', 'languages', 'lives_in', 'parent_frequency', 'parent_age', 'tried_competitor', 'comfort_alone', 'smartphone', 'helper_frequency', 'would_help'];
+  var FEATURES = { rate_matching: 'Finding someone on the same flight', rate_privacy: 'Families agree before sharing numbers', rate_parent_app: 'Simple app for the parent in their language', rate_journey_guide: 'Step-by-step airport guide', rate_live_updates: 'Updates to family at every step', rate_help_button: 'Help button', rate_email_import: 'Adding a trip from the booking email' };
+
+  function el(tag, attrs, text) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function when(iso) {
+    var d = new Date(iso);
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+  function call(path, opts) {
+    opts = opts || {};
+    return fetch(API + path, { method: opts.method || 'GET', headers: { Authorization: 'Bearer ' + token } }).then(function (r) {
+      if (r.status === 401) { lock('That password is not right.'); throw new Error('locked'); }
+      if (!r.ok) throw new Error('Could not load (' + r.status + ')');
+      return opts.raw ? r : r.json();
+    });
+  }
+  function download(name, text, type) {
+    var url = URL.createObjectURL(new Blob([text], { type: type }));
+    var a = el('a', { href: url, download: name });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function lock(msg) {
+    token = null;
+    try { sessionStorage.removeItem(KEY); } catch (e) {}
+    document.getElementById('app').hidden = true;
+    document.getElementById('signout').hidden = true;
+    var f = document.getElementById('login');
+    f.hidden = false;
+    var n = f.querySelector('.notice');
+    if (msg) { n.className = 'notice err'; n.textContent = msg; n.hidden = false; } else n.hidden = true;
+  }
+
+  function bars(container, title, counts, labels, total) {
+    var card = el('div', { class: 'card' });
+    card.appendChild(el('h3', null, title));
+    var entries = Object.keys(counts).map(function (k) { return [k, counts[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    var max = entries.length ? entries[0][1] : 1;
+    entries.forEach(function (e) {
+      var row = el('div', { class: 'bar-row' });
+      row.appendChild(el('span', null, (labels && labels[e[0]]) || e[0]));
+      row.appendChild(el('span', { class: 'v' }, e[1] + (total ? '  ·  ' + Math.round((e[1] / total) * 100) + '%' : '')));
+      var track = el('div', { class: 'bar-track' });
+      var fill = el('div', { class: 'bar-fill' });
+      fill.style.width = Math.max(2, (e[1] / max) * 100) + '%';
+      track.appendChild(fill);
+      row.appendChild(track);
+      card.appendChild(row);
+    });
+    container.appendChild(card);
+  }
+
+  function renderSummary(s, msgs, stories, wl) {
+    var tiles = document.getElementById('tiles');
+    tiles.innerHTML = '';
+    var yes = ((s.questions.would_use || {}).definitely || 0) + ((s.questions.would_use || {}).probably || 0);
+    var answeredUse = Object.keys(s.questions.would_use || {}).reduce(function (a, k) { return a + s.questions.would_use[k]; }, 0);
+    [[s.responses, 'Survey responses'], [answeredUse ? Math.round((yes / answeredUse) * 100) + '%' : '–', 'Would use it (definitely or probably)'], [s.waitlist, 'Early-access sign-ups'], [msgs.length, 'Unanswered messages'], [stories.filter(function (x) { return !x.approved; }).length, 'Stories to review']].forEach(function (t) {
+      var d = el('div', { class: 'tile' });
+      d.appendChild(el('span', { class: 'n' }, String(t[0])));
+      d.appendChild(el('span', { class: 'l' }, t[1]));
+      tiles.appendChild(d);
+    });
+
+    var qs = document.getElementById('questions');
+    qs.innerHTML = '';
+    if (!s.responses) qs.appendChild(el('p', { class: 'empty' }, 'No survey responses yet. Share the survey link to start collecting them.'));
+    else bars(qs, LABELS.role[0], s.byRole, LABELS.role[1], s.responses);
+    ORDER.forEach(function (k) {
+      if (s.questions[k]) bars(qs, LABELS[k][0], s.questions[k], LABELS[k][1], s.responses);
+    });
+
+    var rt = document.getElementById('ratings');
+    rt.innerHTML = '';
+    var any = false;
+    Object.keys(FEATURES).map(function (k) {
+      var c = s.questions[k] || {};
+      var n = 0, sum = 0;
+      Object.keys(c).forEach(function (v) { n += c[v]; sum += Number(v) * c[v]; });
+      return [FEATURES[k], n ? sum / n : null, n];
+    }).sort(function (a, b) { return (b[1] || 0) - (a[1] || 0); }).forEach(function (r) {
+      if (r[1] === null) return;
+      any = true;
+      var lab = el('div');
+      lab.appendChild(el('div', null, r[0] + '  (' + r[2] + ')'));
+      var track = el('div', { class: 'bar-track' });
+      var fill = el('div', { class: 'bar-fill' });
+      fill.style.width = (r[1] / 5) * 100 + '%';
+      fill.style.background = 'var(--marigold)';
+      track.appendChild(fill);
+      lab.appendChild(track);
+      rt.appendChild(lab);
+      rt.appendChild(el('div', { class: 'avg' }, r[1].toFixed(1)));
+    });
+    document.getElementById('ratings-card').hidden = !any;
+
+    var cm = document.getElementById('comments');
+    cm.innerHTML = '';
+    if (!s.comments.length) cm.appendChild(el('p', { class: 'empty' }, 'No written comments yet.'));
+    s.comments.forEach(function (c) {
+      var d = el('div', { class: 'item' });
+      d.appendChild(el('span', { class: 'meta' }, when(c.at) + ' · ' + (LABELS.role[1][c.role] || c.role) + (c.question === 'competitor_name' ? ' · named a competitor' : '')));
+      d.appendChild(el('p', null, c.text));
+      cm.appendChild(d);
+    });
+
+    renderMessages(msgs);
+
+    var st = document.getElementById('stories');
+    st.innerHTML = '';
+    if (!stories.length) st.appendChild(el('p', { class: 'empty' }, 'No stories submitted yet.'));
+    stories.forEach(function (x) {
+      var d = el('div', { class: 'item' });
+      d.appendChild(el('span', { class: 'meta' }, when(x.created_at) + ' · ' + x.name + (x.location ? ', ' + x.location : '') + (x.email ? ' · ' + x.email : '') + (x.approved ? ' · published' : ' · not published')));
+      d.appendChild(el('p', null, x.story));
+      if (!x.approved) {
+        var b = el('button', { class: 'btn small gold', type: 'button' }, 'Publish on the website');
+        b.addEventListener('click', function () { b.disabled = true; call('/admin/stories/' + x.id + '/approve', { method: 'POST' }).then(load); });
+        var w = el('div'); w.appendChild(b); d.appendChild(w);
+      }
+      st.appendChild(d);
+    });
+
+    var tb = document.getElementById('waitlist');
+    tb.innerHTML = '';
+    if (!wl.length) { var tr0 = el('tr'); var td0 = el('td', { colspan: '5', class: 'empty' }, 'No sign-ups yet.'); tr0.appendChild(td0); tb.appendChild(tr0); }
+    wl.forEach(function (w) {
+      var tr = el('tr');
+      [w.email, { ios: 'iPhone', android: 'Android', either: 'Not sure' }[w.platform] || '–', LABELS.role[1][w.role] || '–', w.source || '–', when(w.created_at)].forEach(function (v) { tr.appendChild(el('td', null, v)); });
+      tb.appendChild(tr);
+    });
+    document.getElementById('dl-waitlist').onclick = function () {
+      var lines = ['email,phone,role,source,joined'].concat(wl.map(function (w) { return [w.email, w.platform || '', w.role || '', w.source || '', w.created_at].join(','); }));
+      download('saathi-early-access.csv', lines.join('\n'), 'text/csv');
+    };
+  }
+
+  function renderMessages(msgs) {
+    var box = document.getElementById('messages');
+    box.innerHTML = '';
+    if (!msgs.length) box.appendChild(el('p', { class: 'empty' }, 'No messages waiting for a reply.'));
+    var TOPIC = { question: 'Question', privacy: 'Their information (see or delete)', partnership: 'Partnership', other: 'Other' };
+    msgs.forEach(function (m) {
+      var d = el('div', { class: 'item' });
+      d.appendChild(el('span', { class: 'meta' }, when(m.created_at) + ' · ' + (TOPIC[m.topic] || m.topic) + (m.handled ? ' · answered' : '')));
+      var who = el('div');
+      who.appendChild(el('strong', null, m.name + '  '));
+      var a = el('a', { href: 'mailto:' + m.email + '?subject=' + encodeURIComponent('Re: your message to Saathi') }, m.email);
+      who.appendChild(a);
+      d.appendChild(who);
+      d.appendChild(el('p', null, m.message));
+      if (!m.handled) {
+        var b = el('button', { class: 'btn small outline', type: 'button' }, 'Mark as answered');
+        b.addEventListener('click', function () { b.disabled = true; call('/admin/messages/' + m.id + '/handled', { method: 'POST' }).then(load); });
+        var w = el('div'); w.appendChild(b); d.appendChild(w);
+      }
+      box.appendChild(d);
+    });
+  }
+
+  function load() {
+    var all = document.getElementById('show-handled').checked ? '?all=1' : '';
+    return Promise.all([
+      call('/admin/survey/summary'),
+      call('/admin/messages' + all),
+      call('/admin/stories'),
+      call('/admin/waitlist'),
+    ]).then(function (r) {
+      var unanswered = r[1].messages.filter(function (m) { return !m.handled; });
+      renderSummary(r[0], unanswered, r[2].stories, r[3].waitlist);
+      if (all) renderMessages(r[1].messages);
+      document.getElementById('login').hidden = true;
+      document.getElementById('app').hidden = false;
+      document.getElementById('signout').hidden = false;
+    }).catch(function (e) {
+      if (e.message !== 'locked') lock(e.message.indexOf('Could not') === 0 ? e.message : 'Could not connect. Check your internet and try again.');
+    });
+  }
+
+  document.getElementById('login').addEventListener('submit', function (e) {
+    e.preventDefault();
+    token = document.getElementById('pw').value.trim();
+    if (!token) return;
+    try { sessionStorage.setItem(KEY, token); } catch (err) {}
+    load();
+  });
+  document.getElementById('signout').addEventListener('click', function () { lock(); });
+  document.getElementById('refresh').addEventListener('click', load);
+  document.getElementById('show-handled').addEventListener('change', load);
+  document.getElementById('dl-survey').addEventListener('click', function () {
+    call('/admin/survey/export.csv', { raw: true }).then(function (r) { return r.text(); }).then(function (t) { download('saathi-survey.csv', t, 'text/csv'); });
+  });
+  document.querySelectorAll('[role="tab"]').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('[role="tab"]').forEach(function (x) { x.setAttribute('aria-selected', String(x === t)); });
+      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== t.getAttribute('data-tab'); });
+    });
+  });
+
+  if (token) load();
+})();
+</script>
+</body>
+</html>

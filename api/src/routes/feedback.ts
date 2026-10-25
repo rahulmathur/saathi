@@ -125,17 +125,23 @@ admin.use('*', async (c, next) => {
   await next();
 });
 
-/** Counts for every multiple-choice question, plus totals. */
+/** Counts for every multiple-choice question, totals, and the latest free-text answers. */
 admin.get('/survey/summary', async (c) => {
   const db = c.env.DB;
-  const rows = await db.prepare('SELECT role, answers FROM survey_responses').all<{ role: string; answers: string }>();
+  const rows = await db
+    .prepare('SELECT role, answers, created_at FROM survey_responses ORDER BY created_at DESC')
+    .all<{ role: string; answers: string; created_at: string }>();
   const totals = { responses: rows.results.length, byRole: {} as Record<string, number> };
   const questions: Record<string, Record<string, number>> = {};
+  const comments: { at: string; role: string; question: string; text: string }[] = [];
   for (const r of rows.results) {
     totals.byRole[r.role] = (totals.byRole[r.role] ?? 0) + 1;
     const a = JSON.parse(r.answers) as Record<string, unknown>;
     for (const [q, v] of Object.entries(a)) {
-      if (FREE_TEXT.has(q)) continue;
+      if (FREE_TEXT.has(q)) {
+        if (typeof v === 'string' && comments.length < 300) comments.push({ at: r.created_at, role: r.role, question: q, text: v });
+        continue;
+      }
       const vals = Array.isArray(v) ? v : typeof v === 'string' && v.length <= 60 ? [v] : typeof v === 'number' ? [String(v)] : [];
       for (const x of vals) {
         questions[q] ??= {};
@@ -144,7 +150,7 @@ admin.get('/survey/summary', async (c) => {
     }
   }
   const waitlist = await db.prepare('SELECT COUNT(*) AS n FROM waitlist').first<{ n: number }>();
-  return c.json({ ...totals, waitlist: waitlist?.n ?? 0, questions });
+  return c.json({ ...totals, waitlist: waitlist?.n ?? 0, questions, comments });
 });
 
 admin.get('/survey/export.csv', async (c) => {
@@ -180,6 +186,11 @@ admin.get('/stories', async (c) => {
 admin.post('/stories/:id/approve', async (c) => {
   await c.env.DB.prepare('UPDATE stories SET approved = 1 WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
+});
+
+admin.get('/waitlist', async (c) => {
+  const rows = await c.env.DB.prepare('SELECT email, role, platform, source, created_at FROM waitlist ORDER BY created_at DESC').all();
+  return c.json({ waitlist: rows.results });
 });
 
 /** Contact-form messages, newest first; ?all=1 includes ones already handled. */
