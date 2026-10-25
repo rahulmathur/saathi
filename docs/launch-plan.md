@@ -1,6 +1,6 @@
 # Launch plan: validate first, spend later
 
-## Phase 1: test demand (cost: the domain only)
+## Phase 1: test demand (cost: nothing)
 
 Goal: find out whether families want Saathi, and what they want first, before paying for anything.
 
