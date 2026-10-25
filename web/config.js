@@ -1,3 +1,5 @@
 // Where the website sends survey answers, waitlist sign-ups and stories.
-// Change this if the API moves; add ?api=http://localhost:8787 to any page to test locally.
-window.SAATHI_API = 'https://api.saathi.travel';
+// Uses the Worker's workers.dev address until api.saathi.travel is connected;
+// then change this to 'https://api.saathi.travel' and redeploy the site.
+// Add ?api=http://localhost:8787 to any page to test locally.
+window.SAATHI_API = 'https://saathi-api.rahul-mathur.workers.dev';

@@ -4,7 +4,7 @@
 
 | Folder | What it is | Runs on |
 | --- | --- | --- |
-| [`web/`](web/) | Website at saathi.travel: landing page, FAQ with comparison, validation survey, early-access list, stories, blog, privacy policy | Cloudflare Pages (free) |
+| [`web/`](web/) | Website for saathi.travel: landing page, FAQ with comparison, validation survey, early-access list, stories, blog, privacy policy | Cloudflare Worker serving static files (free) |
 | [`api/`](api/) | Backend API: sign-in, travellers, trips, matching, introductions, travel-day updates, help alerts, survey and waitlist | Cloudflare Workers + D1 database (free tier) |
 | [`mobile/`](mobile/) | iPhone and Android app: family app and a separate, simple parent app (English/Hindi) | Expo / React Native |
 | [`prototype/`](prototype/) | Clickable single-file design prototype | Any browser |
@@ -50,13 +50,28 @@ While `DEV_MODE = "true"` in `api/wrangler.toml`, sign-in codes are shown in the
 
 ## Deploying (all free tier)
 
-The Cloudflare D1 database `saathi` already exists, with all tables created and sample data loaded.
+Live now:
 
-1. **API:** `cd api && npx wrangler login && npx wrangler deploy`, then `npx wrangler secret put ADMIN_TOKEN`. Add a custom domain `api.saathi.travel` to the Worker in the Cloudflare dashboard.
-2. **Website:** in Cloudflare Pages, create a project from this repository with build output directory `web` and no build command. Add the custom domain `saathi.travel`.
-3. **Survey results:** `curl -H "Authorization: Bearer $ADMIN_TOKEN" https://api.saathi.travel/admin/survey/summary` for counts, or `/admin/survey/export.csv` for a spreadsheet.
+| What | Address |
+| --- | --- |
+| Website | https://saathi.rahul-mathur.workers.dev (Worker `saathi`, static files from `web/`) |
+| API | https://saathi-api.rahul-mathur.workers.dev (Worker `saathi-api`) |
+| Database | Cloudflare D1 `saathi` (migrations 0001–0002 applied, sample travellers loaded) |
 
-The phone app can be tested for free with Expo Go. Store listings (Apple $99 a year, Google $25 once) are deliberately left until the survey shows demand. See [`docs/launch-plan.md`](docs/launch-plan.md).
+To redeploy after changes, with `CLOUDFLARE_API_TOKEN` set or after `npx wrangler login`:
+
+```bash
+cd api && npx wrangler deploy     # API
+cd ../web && npx wrangler deploy  # website
+```
+
+**Survey results:** `curl -H "Authorization: Bearer $ADMIN_TOKEN" https://saathi-api.rahul-mathur.workers.dev/admin/survey/summary` gives counts, and `/admin/survey/export.csv` gives a spreadsheet. To choose your own admin password: `cd api && npx wrangler secret put ADMIN_TOKEN`.
+
+**Connecting saathi.travel:** add the domain to this Cloudflare account (Websites → Add a site), then:
+1. In Workers & Pages, add the custom domain `saathi.travel` (and `www.saathi.travel`) to the `saathi` Worker, and `api.saathi.travel` to the `saathi-api` Worker.
+2. Change `web/config.js` to `https://api.saathi.travel` and run `npx wrangler deploy` in `web/`.
+
+The phone app can be tested for free with Expo Go, pointed at the live API with `EXPO_PUBLIC_API_URL=https://saathi-api.rahul-mathur.workers.dev`. Store listings (Apple $99 a year, Google $25 once) are deliberately left until the survey shows demand. See [`docs/launch-plan.md`](docs/launch-plan.md).
 
 ## Turning on paid services later
 
