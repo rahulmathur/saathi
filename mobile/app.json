@@ -40,6 +40,16 @@
       "typedRoutes": false,
       "reactCompiler": true
     },
-    "description": "Find trusted company for your parents' flights and follow every step of their journey."
+    "description": "Find trusted company for your parents' flights and follow every step of their journey.",
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "5f4aa827-c451-4040-ad16-bceea9cc98d1"
+      }
+    }
   }
 }
