@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find holiday flight company | Saathi</title>
+<meta name="description" content="Parents flying between India and the US for Diwali, Thanksgiving or the winter holidays? Tell us their trip and we'll look for another family on the same flight.">
+<meta property="og:title" content="Flying for Diwali or Thanksgiving? Find your parents company on the flight">
+<meta property="og:description" content="Register your parents' holiday trip and Saathi will look for another family on the same flight. Free while we test.">
+<meta property="og:image" content="https://saathi.rahul-mathur.workers.dev/assets/photo-friends.jpg">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Saathi home">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="13" cy="17" r="10" fill="#1C2B4F"/><circle cx="21" cy="17" r="10" fill="#F4A62A" fill-opacity=".92"/></svg>
+      Saathi
+    </a>
+    <a class="btn small outline" href="/">Back to site</a>
+  </div>
+</header>
+<main class="section" style="padding-top: 40px">
+  <div class="wrap stack" style="max-width: 760px; gap: 24px">
+    <div class="stack">
+      <span class="eyebrow">Diwali, Thanksgiving and winter holidays</span>
+      <h1 style="font-size: clamp(32px, 5vw, 44px)">Flying for the holidays? Let's find them company.</h1>
+      <p class="lead">Whether Maa and Papa are coming to you for Thanksgiving or heading home for Diwali, tell us about their trip. We'll look for another family whose parents are on the same flight, or landing at the same time.</p>
+    </div>
+    <div class="card" style="background: var(--marigold-soft); border-color: #F6D9A6">
+      <h3>How this pilot works</h3>
+      <ul class="ticks">
+        <li>A real person on our team reads every trip and looks for matches by hand while the app is in testing.</li>
+        <li>If we find a family on the same flight, or landing within about 90 minutes, we email you both.</li>
+        <li>Nothing about you is shared until both families say yes.</li>
+        <li>It's free. A companion is company, not a carer, so book the airline's wheelchair help too if it's needed.</li>
+      </ul>
+    </div>
+    <form id="holiday-form" class="card form" novalidate>
+      <h2 style="font-size: 24px">Who is travelling</h2>
+      <div class="field"><label for="h-trav">Who is flying</label><span class="hint">First names and ages are enough</span><input id="h-trav" name="travellers" type="text" required maxlength="120" placeholder="Maa (68) and Papa (72)"></div>
+      <div class="field">
+        <span class="legend" id="h-dir">Which way are they flying?</span>
+        <div class="choices" role="radiogroup" aria-labelledby="h-dir">
+          <label class="choice"><input type="radio" name="direction" value="to_us" required><span>India to the US</span></label>
+          <label class="choice"><input type="radio" name="direction" value="to_india"><span>US to India</span></label>
+          <label class="choice"><input type="radio" name="direction" value="other"><span>Another route</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="legend" id="h-occ">What's the occasion?</span>
+        <div class="choices" role="radiogroup" aria-labelledby="h-occ">
+          <label class="choice"><input type="radio" name="occasion" value="diwali"><span>Diwali</span></label>
+          <label class="choice"><input type="radio" name="occasion" value="thanksgiving"><span>Thanksgiving</span></label>
+          <label class="choice"><input type="radio" name="occasion" value="winter"><span>Winter holidays</span></label>
+          <label class="choice"><input type="radio" name="occasion" value="other"><span>Something else</span></label>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="field"><label for="h-from">Flying from</label><input id="h-from" name="origin" type="text" required maxlength="60" list="airports" placeholder="Delhi (DEL)"></div>
+        <div class="field"><label for="h-to">Flying to</label><input id="h-to" name="destination" type="text" required maxlength="60" list="airports" placeholder="Newark (EWR)"></div>
+      </div>
+      <datalist id="airports">
+        <option value="Delhi (DEL)"><option value="Mumbai (BOM)"><option value="Bengaluru (BLR)"><option value="Hyderabad (HYD)"><option value="Chennai (MAA)"><option value="Ahmedabad (AMD)"><option value="Kolkata (CCU)"><option value="Kochi (COK)"><option value="Amritsar (ATQ)"><option value="Pune (PNQ)">
+        <option value="Newark (EWR)"><option value="New York JFK (JFK)"><option value="Chicago (ORD)"><option value="San Francisco (SFO)"><option value="Washington Dulles (IAD)"><option value="Houston (IAH)"><option value="Dallas (DFW)"><option value="Atlanta (ATL)"><option value="Boston (BOS)"><option value="Seattle (SEA)"><option value="Los Angeles (LAX)">
+      </datalist>
+      <div class="grid two">
+        <div class="field"><label for="h-date">Date they fly</label><input id="h-date" name="travelDate" type="date" required></div>
+        <div class="field"><label for="h-flight">Flight number, if booked</label><input id="h-flight" name="flight" type="text" maxlength="12" placeholder="AI 101" autocapitalize="characters"></div>
+      </div>
+      <div class="field">
+        <span class="legend" id="h-lang">Languages they're comfortable in</span>
+        <div class="choices" role="group" aria-labelledby="h-lang">
+          <label class="choice"><input type="checkbox" name="languages" value="Hindi"><span>Hindi</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="English"><span>English</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Gujarati"><span>Gujarati</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Punjabi"><span>Punjabi</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Tamil"><span>Tamil</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Telugu"><span>Telugu</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Marathi"><span>Marathi</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Bengali"><span>Bengali</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Malayalam"><span>Malayalam</span></label>
+          <label class="choice"><input type="checkbox" name="languages" value="Kannada"><span>Kannada</span></label>
+        </div>
+      </div>
+      <div class="field"><label for="h-notes">Anything that would help us find the right match (optional)</label><textarea id="h-notes" name="notes" maxlength="1000" placeholder="First long flight, connecting in Frankfurt, vegetarian, would like a fellow senior..."></textarea></div>
+
+      <h2 style="font-size: 24px">How we reach you</h2>
+      <div class="grid two">
+        <div class="field"><label for="h-name">Your first name</label><input id="h-name" name="name" type="text" required maxlength="80" autocomplete="given-name"></div>
+        <div class="field"><label for="h-email">Your email</label><input id="h-email" name="email" type="email" required autocomplete="email"></div>
+      </div>
+      <div class="field"><label for="h-phone">WhatsApp number (optional)</label><input id="h-phone" name="phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+1 201 555 0100"></div>
+      <label class="check"><input type="checkbox" name="consent" required> Email me if you find a possible companion. I understand nothing is shared until both families agree.</label>
+      <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div><button class="btn gold" type="submit">Find them company</button></div>
+      <div class="notice" role="status" hidden></div>
+    </form>
+    <p class="small muted">We use these details only to look for a companion and to tell you when the app launches. See our <a href="privacy.html">privacy policy</a>.</p>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap"><p>© <span id="year">2026</span> Saathi · <a href="/">Home</a> · <a href="blog/">Blog</a> · <a href="privacy.html">Privacy</a></p></div>
+</footer>
+<script src="config.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

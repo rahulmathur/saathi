@@ -30,6 +30,8 @@
   .item .meta { font-size: 14px; color: var(--muted); }
   .item p { white-space: pre-wrap; overflow-wrap: anywhere; }
   .empty { color: var(--muted); padding: 8px 0; }
+  .date-head { font-size: 19px; margin-top: 8px; }
+  .match { background: var(--marigold-soft); border-radius: 10px; padding: 6px 10px; font-size: 15px; font-weight: 700; color: var(--brown); }
   table.list { width: 100%; border-collapse: collapse; background: var(--card); font-size: 15px; }
   table.list th, table.list td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
   table.list th { background: var(--ground); font-size: 14px; }
@@ -64,6 +66,7 @@
         <button role="tab" data-tab="comments" aria-selected="false">Comments</button>
         <button role="tab" data-tab="messages" aria-selected="false">Messages</button>
         <button role="tab" data-tab="stories" aria-selected="false">Stories</button>
+        <button role="tab" data-tab="holiday" aria-selected="false">Holiday trips</button>
         <button role="tab" data-tab="waitlist" aria-selected="false">Early access</button>
       </div>
 
@@ -78,6 +81,11 @@
         <div id="messages" class="stack"></div>
       </section>
       <section data-panel="stories" class="stack" hidden><div id="stories" class="stack"></div></section>
+      <section data-panel="holiday" class="stack" hidden>
+        <p class="muted small">Trips are grouped by travel date. "Possible match" means another trip that day shares the flight, the departure airport or the arrival airport. Check the times before emailing both families.</p>
+        <div class="btn-row" style="align-items: center"><button class="btn small outline" id="dl-holiday" type="button">Download holiday trips</button><label class="check"><input type="checkbox" id="show-all-trips"> Show past and handled trips too</label></div>
+        <div id="holiday" class="stack"></div>
+      </section>
       <section data-panel="waitlist" class="stack" hidden>
         <div><button class="btn small outline" id="dl-waitlist" type="button">Download early-access list</button></div>
         <div class="table-scroll"><table class="list"><thead><tr><th>Email</th><th>Phone</th><th>Who</th><th>From</th><th>Joined</th></tr></thead><tbody id="waitlist"></tbody></table></div>
@@ -170,12 +178,67 @@
     container.appendChild(card);
   }
 
-  function renderSummary(s, msgs, stories, wl) {
+  var DIRECTION = { to_us: 'India to US', to_india: 'US to India', other: 'Other route' };
+  var OCCASION = { diwali: 'Diwali', thanksgiving: 'Thanksgiving', winter: 'Winter holidays', other: 'Other' };
+  // "Newark (EWR)" -> EWR; otherwise the text as typed, lower-cased, so the same city still matches.
+  function airport(v) {
+    var m = /\(([A-Za-z]{3})\)\s*$/.exec(v || '') || /^\s*([A-Za-z]{3})\s*$/.exec(v || '');
+    return m ? m[1].toUpperCase() : (v || '').trim().toLowerCase();
+  }
+  function day(iso) {
+    return new Date(iso + 'T12:00:00Z').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  function renderHoliday(trips) {
+    var box = document.getElementById('holiday');
+    box.innerHTML = '';
+    if (!trips.length) box.appendChild(el('p', { class: 'empty' }, 'No upcoming holiday trips yet. Share holiday.html in community groups to collect them.'));
+    var byDate = {};
+    trips.forEach(function (t) { (byDate[t.travel_date] = byDate[t.travel_date] || []).push(t); });
+    Object.keys(byDate).sort().forEach(function (date) {
+      var list = byDate[date];
+      box.appendChild(el('h3', { class: 'date-head' }, day(date) + '  ·  ' + list.length + (list.length === 1 ? ' trip' : ' trips')));
+      list.forEach(function (t) {
+        var matches = list.filter(function (o) {
+          if (o === t) return false;
+          if (t.flight && o.flight && t.flight === o.flight) return true;
+          return airport(o.origin) === airport(t.origin) || airport(o.destination) === airport(t.destination);
+        });
+        var d = el('div', { class: 'item' });
+        var langs = [];
+        try { langs = JSON.parse(t.languages || '[]'); } catch (e) {}
+        d.appendChild(el('span', { class: 'meta' }, (OCCASION[t.occasion] || t.occasion) + ' · ' + (DIRECTION[t.direction] || t.direction) + ' · registered ' + when(t.created_at) + (t.handled ? ' · handled' : '')));
+        d.appendChild(el('strong', null, t.travellers + ': ' + t.origin + ' to ' + t.destination + (t.flight ? ' on ' + t.flight : '')));
+        if (langs.length) d.appendChild(el('span', null, 'Languages: ' + langs.join(', ')));
+        if (t.notes) d.appendChild(el('p', null, t.notes));
+        var who = el('div');
+        who.appendChild(el('span', null, 'Family: ' + t.name + '  '));
+        who.appendChild(el('a', { href: 'mailto:' + t.email + '?subject=' + encodeURIComponent('A travel companion for your parents\' trip') }, t.email));
+        if (t.phone) who.appendChild(el('span', null, '  ·  WhatsApp ' + t.phone));
+        d.appendChild(who);
+        if (matches.length) d.appendChild(el('div', { class: 'match' }, 'Possible match: ' + matches.map(function (o) { return o.travellers + ' (' + o.name + ', ' + o.origin + ' to ' + o.destination + (o.flight ? ', ' + o.flight : '') + ')'; }).join('; ')));
+        if (!t.handled) {
+          var b = el('button', { class: 'btn small outline', type: 'button' }, 'Mark as handled');
+          b.addEventListener('click', function () { b.disabled = true; call('/admin/holiday-trips/' + t.id + '/handled', { method: 'POST' }).then(load); });
+          var w = el('div'); w.appendChild(b); d.appendChild(w);
+        }
+        box.appendChild(d);
+      });
+    });
+    document.getElementById('dl-holiday').onclick = function () {
+      var esc = function (v) { var s = v === null || v === undefined ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      var cols = ['travel_date', 'travellers', 'direction', 'origin', 'destination', 'flight', 'occasion', 'languages', 'notes', 'name', 'email', 'phone', 'handled', 'created_at'];
+      var lines = [cols.join(',')].concat(trips.map(function (t) { return cols.map(function (c) { return esc(t[c]); }).join(','); }));
+      download('saathi-holiday-trips.csv', lines.join('\n'), 'text/csv');
+    };
+  }
+
+  function renderSummary(s, msgs, stories, wl, trips) {
     var tiles = document.getElementById('tiles');
     tiles.innerHTML = '';
     var yes = ((s.questions.would_use || {}).definitely || 0) + ((s.questions.would_use || {}).probably || 0);
     var answeredUse = Object.keys(s.questions.would_use || {}).reduce(function (a, k) { return a + s.questions.would_use[k]; }, 0);
-    [[s.responses, 'Survey responses'], [answeredUse ? Math.round((yes / answeredUse) * 100) + '%' : '–', 'Would use it (definitely or probably)'], [s.waitlist, 'Early-access sign-ups'], [msgs.length, 'Unanswered messages'], [stories.filter(function (x) { return !x.approved; }).length, 'Stories to review']].forEach(function (t) {
+    [[s.responses, 'Survey responses'], [answeredUse ? Math.round((yes / answeredUse) * 100) + '%' : '–', 'Would use it (definitely or probably)'], [s.waitlist, 'Early-access sign-ups'], [msgs.length, 'Unanswered messages'], [stories.filter(function (x) { return !x.approved; }).length, 'Stories to review'], [trips.length, 'Holiday trips to match']].forEach(function (t) {
       var d = el('div', { class: 'tile' });
       d.appendChild(el('span', { class: 'n' }, String(t[0])));
       d.appendChild(el('span', { class: 'l' }, t[1]));
@@ -285,9 +348,12 @@
       call('/admin/messages' + all),
       call('/admin/stories'),
       call('/admin/waitlist'),
+      call('/admin/holiday-trips' + (document.getElementById('show-all-trips').checked ? '?all=1' : '')),
     ]).then(function (r) {
       var unanswered = r[1].messages.filter(function (m) { return !m.handled; });
-      renderSummary(r[0], unanswered, r[2].stories, r[3].waitlist);
+      var trips = r[4].trips;
+      renderSummary(r[0], unanswered, r[2].stories, r[3].waitlist, trips.filter(function (t) { return !t.handled; }));
+      renderHoliday(trips);
       if (all) renderMessages(r[1].messages);
       document.getElementById('login').hidden = true;
       document.getElementById('app').hidden = false;
@@ -307,6 +373,7 @@
   document.getElementById('signout').addEventListener('click', function () { lock(); });
   document.getElementById('refresh').addEventListener('click', load);
   document.getElementById('show-handled').addEventListener('change', load);
+  document.getElementById('show-all-trips').addEventListener('change', load);
   document.getElementById('dl-survey').addEventListener('click', function () {
     call('/admin/survey/export.csv', { raw: true }).then(function (r) { return r.text(); }).then(function (t) { download('saathi-survey.csv', t, 'text/csv'); });
   });

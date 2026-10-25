@@ -116,6 +116,45 @@
     });
   }
 
+  var holidayForm = document.getElementById('holiday-form');
+  if (holidayForm) {
+    holidayForm.travelDate.min = new Date().toISOString().slice(0, 10);
+    holidayForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!holidayForm.reportValidity()) return;
+      var fd = new FormData(holidayForm);
+      var msg = holidayForm.querySelector('.notice');
+      var btn = holidayForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      window.saathiPost('/public/holiday-trips', {
+        travellers: fd.get('travellers'),
+        direction: fd.get('direction'),
+        occasion: fd.get('occasion'),
+        origin: fd.get('origin'),
+        destination: fd.get('destination'),
+        travelDate: fd.get('travelDate'),
+        flight: fd.get('flight'),
+        languages: fd.getAll('languages'),
+        notes: fd.get('notes'),
+        name: fd.get('name'),
+        email: fd.get('email'),
+        phone: fd.get('phone'),
+        consent: fd.get('consent') === 'on',
+        website: fd.get('website'),
+      }).then(function () {
+        notice(msg, 'ok', "Thank you. We've got their trip and will email you if we find a family on the same flight or landing nearby. Flying back too? Add the return trip as well.");
+        holidayForm.reset();
+      }).catch(function (err) {
+        notice(msg, 'err', err.message);
+      }).then(function () { btn.disabled = false; });
+    });
+  }
+
+  // Seasonal banner: hidden once its date has passed
+  document.querySelectorAll('[data-until]').forEach(function (el) {
+    if (new Date().toISOString().slice(0, 10) > el.getAttribute('data-until')) el.hidden = true;
+  });
+
   var storyForm = document.getElementById('story-form');
   if (storyForm) {
     storyForm.addEventListener('submit', function (e) {

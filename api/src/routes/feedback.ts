@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
-import { EMAIL_RE, fail, newId, readBody, sha256, str } from '../util';
+import { EMAIL_RE, fail, isValidDate, newId, readBody, sha256, str, strList } from '../util';
 
 /**
  * Website survey, waitlist, stories and contact form. Public and unauthenticated, so each
@@ -115,6 +115,61 @@ feedback.post('/messages', async (c) => {
   return c.json({ ok: true }, 201);
 });
 
+const DIRECTIONS = ['to_us', 'to_india', 'other'];
+const OCCASIONS = ['diwali', 'thanksgiving', 'winter', 'other'];
+
+/** A holiday trip for the hand-matched pilot. The family's email also joins the early-access list. */
+feedback.post('/holiday-trips', async (c) => {
+  const body = await readBody(c.req);
+  if (body.website) return c.json({ ok: true });
+  const email = str(body, 'email', { required: true, max: 254 })!.toLowerCase();
+  if (!EMAIL_RE.test(email)) fail(400, 'Please check your email address so we can reach you');
+  const direction = str(body, 'direction', { required: true, max: 20 })!;
+  if (!DIRECTIONS.includes(direction)) fail(400, 'Please choose which way they are flying');
+  const occasion = str(body, 'occasion', { max: 20 }) ?? 'other';
+  if (!OCCASIONS.includes(occasion)) fail(400, 'Please choose the occasion');
+  const travelDate = str(body, 'travelDate', { required: true, max: 10 })!;
+  if (!isValidDate(travelDate)) fail(400, 'Please check the travel date');
+  const today = new Date().toISOString().slice(0, 10);
+  if (travelDate < today) fail(400, 'That date has already passed');
+  if (Date.parse(travelDate) - Date.parse(today) > 366 * 86400000) fail(400, 'Please choose a date within the next year');
+  const flight = str(body, 'flight', { max: 12 })?.toUpperCase().replace(/\s+/g, '') ?? null;
+  const languages = strList(body, 'languages');
+  if (body.consent !== true) fail(400, 'Please agree to be contacted about a possible companion');
+
+  const ipHash = await visitorHash(c);
+  const since = new Date(Date.now() - 3600_000).toISOString();
+  const recent = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM holiday_trips WHERE ip_hash = ? AND created_at > ?').bind(ipHash, since).first<{ n: number }>();
+  if ((recent?.n ?? 0) >= PER_HOUR) fail(429, 'Thank you, we have your trips. We will be in touch by email.');
+
+  const db = c.env.DB;
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO holiday_trips (id, name, email, phone, travellers, direction, origin, destination, travel_date, flight, occasion, languages, notes, ip_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        newId(),
+        str(body, 'name', { required: true, max: 80 }),
+        email,
+        str(body, 'phone', { max: 30 }),
+        str(body, 'travellers', { required: true, max: 120 }),
+        direction,
+        str(body, 'origin', { required: true, max: 60 }),
+        str(body, 'destination', { required: true, max: 60 }),
+        travelDate,
+        flight,
+        occasion,
+        languages ? JSON.stringify(languages) : null,
+        str(body, 'notes', { max: 1000 }),
+        ipHash,
+      ),
+    db.prepare('INSERT OR IGNORE INTO waitlist (email, role, source) VALUES (?, ?, ?)').bind(email, 'family', 'holiday-trip'),
+  ]);
+  return c.json({ ok: true }, 201);
+});
+
 // ---- Results, for the team -----------------------------------------------------
 
 export const admin = new Hono<AppEnv>();
@@ -204,5 +259,23 @@ admin.get('/messages', async (c) => {
 
 admin.post('/messages/:id/handled', async (c) => {
   await c.env.DB.prepare('UPDATE messages SET handled = 1 WHERE id = ?').bind(c.req.param('id')).run();
+  return c.json({ ok: true });
+});
+
+/** Holiday trips by travel date, for matching by hand; ?all=1 includes past and handled ones. */
+admin.get('/holiday-trips', async (c) => {
+  const all = c.req.query('all') === '1';
+  const today = new Date().toISOString().slice(0, 10);
+  const rows = await c.env.DB.prepare(
+    `SELECT id, name, email, phone, travellers, direction, origin, destination, travel_date, flight, occasion, languages, notes, handled, created_at
+     FROM holiday_trips ${all ? '' : 'WHERE handled = 0 AND travel_date >= ?1'} ORDER BY travel_date, created_at LIMIT 500`,
+  )
+    .bind(...(all ? [] : [today]))
+    .all();
+  return c.json({ trips: rows.results });
+});
+
+admin.post('/holiday-trips/:id/handled', async (c) => {
+  await c.env.DB.prepare('UPDATE holiday_trips SET handled = 1 WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
 });

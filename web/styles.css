@@ -54,6 +54,13 @@ p { margin: 0; }
 .muted { color: var(--muted); }
 .small { font-size: 15px; }
 
+/* Seasonal banner */
+.season-bar { background: var(--marigold-soft); border-bottom: 1px solid #F6D9A6; color: var(--ink); font-size: 16px; }
+.season-bar .wrap { padding-top: 10px; padding-bottom: 10px; }
+.season-bar a { font-weight: 700; white-space: nowrap; }
+.season-bar a::after { content: " \2192"; }
+@media (max-width: 600px) { .season-more { display: none; } }
+
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 10; background: rgba(245, 246, 248, 0.94); backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--line); }
 .site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; }
@@ -169,7 +176,7 @@ p { margin: 0; }
 .field { display: grid; gap: 6px; }
 .field label, .legend { font-weight: 700; font-size: 16px; color: var(--ink); }
 .field .hint { font-size: 14px; color: var(--muted); }
-input[type="text"], input[type="email"], select, textarea {
+input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, textarea {
   width: 100%; min-height: 54px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--line-strong); background: #fff; font: inherit; font-size: 18px; color: var(--ink);
 }
 textarea { min-height: 120px; resize: vertical; }

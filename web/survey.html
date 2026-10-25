@@ -245,6 +245,11 @@
         <button class="btn outline" id="share-copy" type="button">Copy link</button>
         <a class="btn outline" href="/">Back to Saathi</a>
       </div>
+      <div class="card" style="background: var(--marigold-soft); border-color: #F6D9A6">
+        <h3>Parents flying for Diwali or Thanksgiving?</h3>
+        <p>Tell us their trip and a real person on our team will look for another family on the same flight. It's free while we test.</p>
+        <div><a class="btn gold" href="holiday.html">Register a holiday trip</a></div>
+      </div>
     </div>
   </div>
 </main>
@@ -354,7 +359,7 @@
   });
 
   var url = location.origin + '/survey';
-  document.getElementById('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent('Do your parents fly alone to visit you? This 3-minute survey is for a new app that finds them company on the flight: ' + url);
+  document.getElementById('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent('Are your parents flying alone for Diwali, Thanksgiving or the holidays? This 3-minute survey is for a new app that finds them company on the flight: ' + url);
   document.getElementById('share-copy').addEventListener('click', function () {
     var b = this;
     (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { b.textContent = 'Link copied'; }, function () { b.textContent = url; });
