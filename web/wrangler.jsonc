@@ -1,4 +1,4 @@
-// The saathi.travel website: static files served by a Cloudflare Worker.
+// The Saathi website: static files served by a Cloudflare Worker.
 // Deploy from this folder with `npx wrangler deploy`.
 {
   "name": "saathi",

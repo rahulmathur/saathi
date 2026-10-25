@@ -91,6 +91,31 @@
     });
   }
 
+  var contactForm = document.getElementById('contact-form');
+  if (contactForm) {
+    var topic = new URLSearchParams(location.search).get('topic');
+    if (topic && contactForm.topic.querySelector('option[value="' + topic + '"]')) contactForm.topic.value = topic;
+    contactForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var fd = new FormData(contactForm);
+      var msg = contactForm.querySelector('.notice');
+      var btn = contactForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      window.saathiPost('/public/messages', {
+        name: fd.get('name'),
+        email: fd.get('email'),
+        topic: fd.get('topic'),
+        message: fd.get('message'),
+        website: fd.get('website'),
+      }).then(function () {
+        notice(msg, 'ok', "Thank you. We've got your message and will reply by email.");
+        contactForm.reset();
+      }).catch(function (err) {
+        notice(msg, 'err', err.message);
+      }).then(function () { btn.disabled = false; });
+    });
+  }
+
   var storyForm = document.getElementById('story-form');
   if (storyForm) {
     storyForm.addEventListener('submit', function (e) {

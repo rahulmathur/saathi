@@ -3,7 +3,7 @@ import type { AppEnv } from '../env';
 import { EMAIL_RE, fail, newId, readBody, sha256, str } from '../util';
 
 /**
- * Website survey, waitlist and stories. Public and unauthenticated, so each
+ * Website survey, waitlist, stories and contact form. Public and unauthenticated, so each
  * endpoint has a honeypot field and a per-visitor rate limit.
  */
 export const feedback = new Hono<AppEnv>();
@@ -95,6 +95,26 @@ feedback.get('/stories', async (c) => {
   return c.json({ stories: rows.results });
 });
 
+const TOPICS = ['question', 'privacy', 'partnership', 'other'];
+
+/** The website's contact form; there is no public email address yet. */
+feedback.post('/messages', async (c) => {
+  const body = await readBody(c.req);
+  if (body.website) return c.json({ ok: true });
+  const email = str(body, 'email', { required: true, max: 254 })!.toLowerCase();
+  if (!EMAIL_RE.test(email)) fail(400, 'Please check your email address so we can reply');
+  const topic = str(body, 'topic', { max: 20 }) ?? 'question';
+  if (!TOPICS.includes(topic)) fail(400, 'Please choose what your message is about');
+  const ipHash = await visitorHash(c);
+  const since = new Date(Date.now() - 3600_000).toISOString();
+  const recent = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM messages WHERE ip_hash = ? AND created_at > ?').bind(ipHash, since).first<{ n: number }>();
+  if ((recent?.n ?? 0) >= PER_HOUR) fail(429, 'Thank you, we have your messages. We will reply soon.');
+  await c.env.DB.prepare('INSERT INTO messages (id, name, email, topic, message, ip_hash) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(newId(), str(body, 'name', { required: true, max: 80 }), email, topic, str(body, 'message', { required: true, max: 4000 }), ipHash)
+    .run();
+  return c.json({ ok: true }, 201);
+});
+
 // ---- Results, for the team -----------------------------------------------------
 
 export const admin = new Hono<AppEnv>();
@@ -159,5 +179,19 @@ admin.get('/stories', async (c) => {
 
 admin.post('/stories/:id/approve', async (c) => {
   await c.env.DB.prepare('UPDATE stories SET approved = 1 WHERE id = ?').bind(c.req.param('id')).run();
+  return c.json({ ok: true });
+});
+
+/** Contact-form messages, newest first; ?all=1 includes ones already handled. */
+admin.get('/messages', async (c) => {
+  const all = c.req.query('all') === '1';
+  const rows = await c.env.DB.prepare(
+    `SELECT id, name, email, topic, message, handled, created_at FROM messages ${all ? '' : 'WHERE handled = 0'} ORDER BY created_at DESC LIMIT 200`,
+  ).all();
+  return c.json({ messages: rows.results });
+});
+
+admin.post('/messages/:id/handled', async (c) => {
+  await c.env.DB.prepare('UPDATE messages SET handled = 1 WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
 });

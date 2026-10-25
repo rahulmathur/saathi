@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Saathi</title>
+<meta name="description" content="Send the Saathi team a question, a privacy request or an idea. A real person reads every message.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Saathi home">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="13" cy="17" r="10" fill="#1C2B4F"/><circle cx="21" cy="17" r="10" fill="#F4A62A" fill-opacity=".92"/></svg>
+      Saathi
+    </a>
+    <a class="btn small outline" href="/">Back to site</a>
+  </div>
+</header>
+<main class="section" style="padding-top: 40px">
+  <div class="wrap stack" style="max-width: 680px; gap: 24px">
+    <div class="stack">
+      <span class="eyebrow">Contact</span>
+      <h1 style="font-size: clamp(32px, 5vw, 44px)">Send us a message</h1>
+      <p class="lead">A question, an idea, a partnership, or a request to see or delete your information. A real person reads every message and replies by email.</p>
+    </div>
+    <form id="contact-form" class="card form" novalidate>
+      <div class="grid two">
+        <div class="field"><label for="c-name">Your name</label><input id="c-name" name="name" type="text" required maxlength="80" autocomplete="name"></div>
+        <div class="field"><label for="c-email">Your email, so we can reply</label><input id="c-email" name="email" type="email" required autocomplete="email"></div>
+      </div>
+      <div class="field">
+        <label for="c-topic">About</label>
+        <select id="c-topic" name="topic">
+          <option value="question">A question about Saathi</option>
+          <option value="privacy">My information: see it or delete it</option>
+          <option value="partnership">Partnering with us (community group, travel agency, airline)</option>
+          <option value="other">Something else</option>
+        </select>
+      </div>
+      <div class="field"><label for="c-message">Message</label><textarea id="c-message" name="message" required maxlength="4000"></textarea></div>
+      <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div><button class="btn" type="submit">Send message</button></div>
+      <div class="notice" role="status" hidden></div>
+    </form>
+    <p class="small muted">We use your name and email only to reply. See our <a href="privacy.html">privacy policy</a>.</p>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap"><p>© <span id="year">2026</span> Saathi · <a href="/">Home</a> · <a href="blog/">Blog</a> · <a href="privacy.html">Privacy</a></p></div>
+</footer>
+<script src="config.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

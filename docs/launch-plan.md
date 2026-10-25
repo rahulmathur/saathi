@@ -7,8 +7,8 @@ Goal: find out whether families want Saathi, and what they want first, before pa
 | What | Cost |
 | --- | --- |
 | Website, survey, waitlist and stories on Cloudflare Pages + Workers + D1 | Free tier |
-| Domain saathi.travel | Registrar fee only |
-| Email to hello@ and privacy@saathi.travel | Free with Cloudflare Email Routing (forwards to an existing inbox) |
+| Domain saathi.travel | Optional: deferred. The site runs on its free workers.dev address |
+| Contact | Free: the site's contact form stores messages in the database |
 | App testing with friends and family | Free through Expo Go |
 
 **How to get responses**
@@ -45,7 +45,7 @@ Check current prices before signing up; they change.
 | Need | Recommendation now | Later, if it grows |
 | --- | --- | --- |
 | **Forum / community** | Don't build one. The community already lives in WhatsApp and Facebook groups. Start a Saathi WhatsApp Community for early-access users. | A hosted forum (e.g. Discourse) once there are a few thousand active users. |
-| **Helpdesk** | hello@saathi.travel forwarded to one inbox, plus the FAQ. Early users want a person, not a ticket number. | A shared inbox or helpdesk once more than one person answers. |
+| **Helpdesk** | The site's contact form plus the FAQ. Early users want a person, not a ticket number. | A shared inbox or helpdesk once more than one person answers. |
 | **CRM** | The waitlist and survey tables plus the CSV export are enough to start. | Sync the waitlist to a free CRM (e.g. HubSpot) for launch emails and partner tracking. |
 | **Chatbot** | Not yet. With few users, the FAQ answers most questions and a chatbot adds cost and risk on a safety-sensitive topic. | An AI assistant grounded in the FAQ and blog, with handover to a person, once support volume justifies it. |
 

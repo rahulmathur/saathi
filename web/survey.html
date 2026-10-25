@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Saathi Survey</title>
 <meta name="description" content="Help us decide whether to build Saathi, and what it should do first. Takes about 3 minutes.">
-<link rel="canonical" href="https://saathi.travel/survey.html">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,7 +353,7 @@
     });
   });
 
-  var url = 'https://saathi.travel/survey.html';
+  var url = location.origin + '/survey';
   document.getElementById('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent('Do your parents fly alone to visit you? This 3-minute survey is for a new app that finds them company on the flight: ' + url);
   document.getElementById('share-copy').addEventListener('click', function () {
     var b = this;

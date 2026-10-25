@@ -65,11 +65,15 @@ cd api && npx wrangler deploy     # API
 cd ../web && npx wrangler deploy  # website
 ```
 
-**Survey results:** `curl -H "Authorization: Bearer $ADMIN_TOKEN" https://saathi-api.rahul-mathur.workers.dev/admin/survey/summary` gives counts, and `/admin/survey/export.csv` gives a spreadsheet. To choose your own admin password: `cd api && npx wrangler secret put ADMIN_TOKEN`.
+**Survey results and messages** (send `Authorization: Bearer $ADMIN_TOKEN`):
+- `https://saathi-api.rahul-mathur.workers.dev/admin/survey/summary` gives survey counts, and `/admin/survey/export.csv` gives a spreadsheet.
+- `/admin/messages` lists unanswered contact-form messages. Mark one done with `POST /admin/messages/<id>/handled`.
+- `/admin/stories` lists submitted stories. Publish one with `POST /admin/stories/<id>/approve`. To choose your own admin password: `cd api && npx wrangler secret put ADMIN_TOKEN`.
 
-**Connecting saathi.travel:** add the domain to this Cloudflare account (Websites → Add a site), then:
+**Connecting saathi.travel later** (not bought yet; the site works without it): add the domain to this Cloudflare account (Websites → Add a site), then:
 1. In Workers & Pages, add the custom domain `saathi.travel` (and `www.saathi.travel`) to the `saathi` Worker, and `api.saathi.travel` to the `saathi-api` Worker.
 2. Change `web/config.js` to `https://api.saathi.travel` and run `npx wrangler deploy` in `web/`.
+3. Optionally add hello@ and privacy@ addresses with Cloudflare Email Routing (free). Until then the site uses a contact form, and nothing on it links to saathi.travel.
 
 The phone app can be tested for free with Expo Go, pointed at the live API with `EXPO_PUBLIC_API_URL=https://saathi-api.rahul-mathur.workers.dev`. Store listings (Apple $99 a year, Google $25 once) are deliberately left until the survey shows demand. See [`docs/launch-plan.md`](docs/launch-plan.md).
 

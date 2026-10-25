@@ -145,5 +145,17 @@ const story = await call('POST', '/public/stories', { name: 'Anjali', location: 
 check('story submitted', story.status === 201, story);
 check('unapproved story hidden', !(await call('GET', '/public/stories')).data.stories.some((s) => s.name === 'Anjali'));
 
+// Contact form
+const msg = await call('POST', '/public/messages', { name: 'Anjali', email: 'anjali@example.com', topic: 'privacy', message: 'Please delete my survey answers.' });
+check('contact message saved', msg.status === 201, msg);
+check('contact needs a reply address', (await call('POST', '/public/messages', { name: 'A', message: 'hi' })).status === 400);
+check('contact rejects unknown topic', (await call('POST', '/public/messages', { name: 'A', email: 'a@example.com', topic: 'spam', message: 'hi' })).status === 400);
+check('messages need admin token', (await call('GET', '/admin/messages')).status === 401);
+const inbox = await call('GET', '/admin/messages', null, ADMIN);
+const mine = inbox.data.messages?.find((m) => m.message === 'Please delete my survey answers.');
+check('message in admin inbox', mine?.topic === 'privacy', inbox.data);
+await call('POST', `/admin/messages/${mine.id}/handled`, null, ADMIN);
+check('handled message leaves inbox', !(await call('GET', '/admin/messages', null, ADMIN)).data.messages.some((m) => m.id === mine.id));
+
 console.log(failures ? `\n${failures} check(s) failed` : '\nAll checks passed');
 process.exit(failures ? 1 : 0);
