@@ -47,5 +47,14 @@ const head = [
 ].join('\n    ');
 let html = readFileSync(file, 'utf8');
 if (!html.includes('rel="manifest"')) html = html.replace('</head>', `    ${head}\n  </head>`);
+// A placeholder inside #root, replaced as soon as the app starts. If the app's
+// code never runs (an old browser, a failed download), people see a message
+// instead of a blank page.
+const placeholder = `<div id="boot" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:#F5F6F8;font-family:system-ui,sans-serif;color:#3E4553;padding:24px;text-align:center">
+      <svg width="72" height="72" viewBox="0 0 34 34" aria-label="Saathi"><circle cx="13" cy="17" r="10" fill="#1C2B4F"/><circle cx="21" cy="17" r="10" fill="#F4A62A" fill-opacity=".92"/></svg>
+      <p id="boot-slow" style="display:none;max-width:320px;font-size:17px;line-height:1.5">Saathi is taking a while to open. Check your internet connection and refresh. If it still doesn't open, update your phone's browser or try Chrome or Safari.</p>
+      <script>setTimeout(function(){var e=document.getElementById('boot-slow');if(e)e.style.display='block'},10000)</script>
+    </div>`;
+html = html.replace(/<div id="root"><\/div>/, `<div id="root">${placeholder}</div>`);
 writeFileSync(file, html);
 console.log('Web app ready in dist-web/');
