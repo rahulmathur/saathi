@@ -2,6 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -87,14 +89,17 @@ export function Screen({
   const bg = white ? colors.card : colors.ground;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={padTop ? ['top', 'left', 'right'] : ['left', 'right']}>
-      {scroll ? (
-        <ScrollView contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[styles.screenContent, { flex: 1 }]}>{children}</View>
-      )}
-      {footer}
+      {/* Shrink the screen above the keyboard so buttons below a field can still be reached. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {scroll ? (
+          <ScrollView contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[styles.screenContent, { flex: 1 }]}>{children}</View>
+        )}
+        {footer}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
