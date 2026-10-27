@@ -57,6 +57,7 @@ Live now:
 | --- | --- |
 | Website | https://saathi.rahul-mathur.workers.dev (Worker `saathi`, static files from `web/`) |
 | API | https://saathi-api.rahul-mathur.workers.dev (Worker `saathi-api`) |
+| Test app (web version, for testers without the store apps) | https://saathi-app.rahul-mathur.workers.dev (Worker `saathi-app`, built from `mobile/`) |
 | Database | Cloudflare D1 `saathi` (migrations 0001–0002 applied, sample travellers loaded) |
 
 To redeploy after changes, with `CLOUDFLARE_API_TOKEN` set or after `npx wrangler login`:
@@ -64,7 +65,10 @@ To redeploy after changes, with `CLOUDFLARE_API_TOKEN` set or after `npx wrangle
 ```bash
 cd api && npx wrangler deploy     # API
 cd ../web && npx wrangler deploy  # website
+cd ../mobile && node scripts/build-web.mjs && npx wrangler deploy  # test app (web version)
 ```
+
+The web build script renames `node_modules/@…` asset folders, because Cloudflare's static hosting redirects in a loop on paths containing `@`. Once email sign-in is connected, build with `EXPO_PUBLIC_TESTING=false` to remove the "use made-up details" notice.
 
 **Results page:** https://saathi.rahul-mathur.workers.dev/results shows survey charts, written comments, contact messages (mark them answered), stories (publish them) and the early-access list, with spreadsheet downloads. It asks for the admin password and isn't linked from the site or listed in search engines.
 

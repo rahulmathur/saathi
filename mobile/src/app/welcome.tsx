@@ -1,8 +1,15 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import { Logo } from '@/components/Logo';
-import { Button, Card, Icon, Row, Screen, Txt } from '@/components/ui';
+import { Banner, Button, Card, Icon, Row, Screen, Txt } from '@/components/ui';
 import { colors } from '@/lib/theme';
+
+/**
+ * Shown while sign-in codes appear on screen instead of being emailed: anyone
+ * could sign in as any email address, so testers should not enter real details.
+ * Build with EXPO_PUBLIC_TESTING=false once email sign-in is connected.
+ */
+const TESTING = process.env.EXPO_PUBLIC_TESTING !== 'false';
 
 export default function Welcome() {
   return (
@@ -17,6 +24,14 @@ export default function Welcome() {
             Find trusted company on your parents' flights, and follow every step of their journey.
           </Txt>
         </View>
+
+        {TESTING ? (
+          <Banner icon="flask">
+            <Txt style={{ color: colors.brownDeep }}>
+              This is a test version. Please use made-up names and numbers for your parents, and tell us what you think through the website.
+            </Txt>
+          </Banner>
+        ) : null}
 
         <Card style={{ gap: 12 }}>
           {[
