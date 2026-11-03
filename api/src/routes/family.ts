@@ -325,7 +325,7 @@ family.get('/trips/:id/matches', async (c) => {
     });
   }
   results.sort((a, b) => b.score - a.score);
-  return c.json({ trip: tripOut(trip), matches: results });
+  return c.json({ trip: tripOut(trip), traveller: travellerOut(traveller), matches: results });
 });
 
 family.post('/trips/:id/intros', async (c) => {
@@ -343,6 +343,7 @@ family.post('/trips/:id/intros', async (c) => {
   if (!target || !target.seeking) fail(404, 'That traveller is no longer looking for company');
   if (target.owner_user_id === userId) fail(400, 'That is one of your own trips');
   if (!relation(forMatch(trip), forMatch(target))) fail(400, 'These trips are not close enough to travel together');
+  if (!traveller.id_verified) return verificationRequired(c, traveller, 'asking for an introduction');
 
   // If they already asked us, saying yes is the same as accepting their request.
   const reverse = await db
@@ -379,6 +380,18 @@ family.post('/trips/:id/intros', async (c) => {
   return c.json({ intro: { id, status: 'pending' } }, 201);
 });
 
+/** Both travellers must have passed an ID check before families are introduced. */
+function verificationRequired(c: { json: (body: unknown, status: 403) => Response }, t: { id: string; name: string }, action: string) {
+  return c.json(
+    {
+      error: `Please verify ${t.name.split(' ')[0]}'s identity before ${action}. It takes about two minutes.`,
+      code: 'verification_required',
+      travellerId: t.id,
+    },
+    403,
+  );
+}
+
 async function announceAccepted(env: AppEnv['Bindings'], introId: string) {
   const db = env.DB;
   const r = await db.prepare('SELECT from_trip_id, to_trip_id FROM intro_requests WHERE id = ?').bind(introId).first<{ from_trip_id: string; to_trip_id: string }>();
@@ -413,7 +426,7 @@ family.get('/intros', async (c) => {
     message: string | null;
     createdAt: string;
     myTripId: string;
-    myTraveller: { name: string; relation: string | null } | null;
+    myTraveller: { id: string; name: string; relation: string | null; idVerified: boolean } | null;
     companion: ReturnType<typeof companionCard>;
   };
   const incoming: IntroItem[] = [];
@@ -426,7 +439,11 @@ family.get('/intros', async (c) => {
     const other = await db.prepare('SELECT * FROM trips WHERE id = ?').bind(otherTripId).first<TripRow>();
     if (!myTrip || !other) continue;
     const tr = await db.prepare('SELECT * FROM travellers WHERE id = ?').bind(other.traveller_id).first<TravellerRow>();
-    const mineTr = await db.prepare('SELECT name, relation FROM travellers WHERE id = ?').bind(myTrip.traveller_id).first<{ name: string; relation: string | null }>();
+    const mineRow = await db
+      .prepare('SELECT id, name, relation, id_verified FROM travellers WHERE id = ?')
+      .bind(myTrip.traveller_id)
+      .first<{ id: string; name: string; relation: string | null; id_verified: number }>();
+    const mineTr = mineRow ? { id: mineRow.id, name: mineRow.name, relation: mineRow.relation, idVerified: !!mineRow.id_verified } : null;
     if (!tr) continue;
     const accepted = r.status === 'accepted';
     const item: IntroItem = {
@@ -458,6 +475,18 @@ family.post('/intros/:id/respond', async (c) => {
     .first<{ id: string; status: string; from_trip_id: string }>();
   if (!r) fail(404, 'Request not found');
   if (r.status !== 'pending') fail(409, `This request is already ${r.status}`);
+  if (accept) {
+    const mine = await db
+      .prepare('SELECT tr.id, tr.name, tr.id_verified FROM intro_requests i JOIN trips t ON t.id = i.to_trip_id JOIN travellers tr ON tr.id = t.traveller_id WHERE i.id = ?')
+      .bind(r.id)
+      .first<{ id: string; name: string; id_verified: number }>();
+    if (mine && !mine.id_verified) return verificationRequired(c, mine, 'accepting an introduction');
+    const theirs = await db
+      .prepare('SELECT tr.id_verified FROM trips t JOIN travellers tr ON tr.id = t.traveller_id WHERE t.id = ?')
+      .bind(r.from_trip_id)
+      .first<{ id_verified: number }>();
+    if (!theirs?.id_verified) fail(409, "The other family's traveller is not verified, so this introduction can't be accepted yet.");
+  }
   const status = accept ? 'accepted' : 'declined';
   await db.prepare('UPDATE intro_requests SET status = ?, responded_at = ? WHERE id = ?').bind(status, nowIso(), r.id).run();
   if (accept) await announceAccepted(c.env, r.id);

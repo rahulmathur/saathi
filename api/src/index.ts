@@ -7,6 +7,7 @@ import { family } from './routes/family';
 import { admin, feedback } from './routes/feedback';
 import { parent } from './routes/parent';
 import { publicRoutes } from './routes/public';
+import { verificationFamily, verificationPublic } from './routes/verification';
 
 const app = new Hono<AppEnv>();
 
@@ -17,7 +18,9 @@ app.route('/auth', auth);
 app.route('/public', publicRoutes);
 app.route('/public', feedback);
 app.route('/admin', admin);
+app.route('/', verificationPublic);
 app.route('/parent', parent);
+app.route('/', verificationFamily);
 app.route('/', family);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));

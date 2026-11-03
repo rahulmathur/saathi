@@ -10,13 +10,13 @@ INSERT OR IGNORE INTO users (id, email, name, phone) VALUES
 
 INSERT OR IGNORE INTO travellers (id, owner_user_id, name, relation, age, kind, home_city, visiting_city, languages, diet, mobility, about, id_verified, vouched_by) VALUES
   ('sample-t1', 'sample-u1', 'Meera Joshi', 'Aai', 66, 'senior', 'Pune', 'Edison, NJ', '["Hindi","Marathi","English"]', 'Vegetarian', 'Walks comfortably',
-   'Has flown this route six times and knows JFK well.', 1, 'Maharashtra community association, NJ'),
+   'Has flown this route six times and knows JFK well.', 0, NULL),
   ('sample-t2', 'sample-u2', 'Ramesh Gupta', 'Papa', 71, 'senior', 'Jaipur', 'Queens, NY', '["Hindi","English"]', 'Vegetarian', 'Uses a wheelchair at airports',
-   'Travelling with his wife Usha. Happy to have one more in the group.', 1, NULL),
+   'Travelling with his wife Usha. Happy to have one more in the group.', 0, NULL),
   ('sample-t3', 'sample-u3', 'Arjun Mehta', 'Me', 27, 'helper', 'Delhi', 'New York, NY', '["Hindi","Punjabi","English"]', NULL, NULL,
-   'Graduate student. Happy to help with bags, the arrival form and finding the exit.', 1, NULL),
+   'Graduate student. Happy to help with bags, the arrival form and finding the exit.', 0, NULL),
   ('sample-t4', 'sample-u4', 'Lakshmi Raman', 'Amma', 69, 'senior', 'Chennai', 'Princeton, NJ', '["Tamil","English"]', 'Vegetarian', 'Walks slowly, no wheelchair',
-   'First trip abroad on her own.', 1, NULL);
+   'First trip abroad on her own.', 0, NULL);
 
 INSERT OR IGNORE INTO trips (id, traveller_id, airline, flight_number, flight_date, origin, destination, depart_time, arrive_time, arrive_date, seat, wheelchair, seeking) VALUES
   ('sample-trip1', 'sample-t1', 'AI', 'AI101', '2026-11-14', 'DEL', 'JFK', '02:10', '07:45', '2026-11-14', '34A', 0, 1),

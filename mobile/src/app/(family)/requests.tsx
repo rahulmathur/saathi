@@ -6,6 +6,7 @@ import { flightLabel, relationLabel, shortDate, timeAgo } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import type { Intro } from '@/lib/types';
 import { useLoad } from '@/lib/useLoad';
+import { goVerifyIfRequired } from '@/lib/verification';
 
 export default function Requests() {
   const { api } = useSession();
@@ -20,7 +21,7 @@ export default function Requests() {
       await api('POST', `/intros/${id}/respond`, { accept });
       await reload();
     } catch (e) {
-      setActionError((e as Error).message);
+      if (!goVerifyIfRequired(e)) setActionError((e as Error).message);
     } finally {
       setBusy(null);
     }
@@ -58,11 +59,26 @@ export default function Requests() {
       {pending.map((i) => (
         <IntroCard key={i.id} intro={i}>
           {i.message ? <Txt style={{ fontStyle: 'italic' }}>"{i.message}"</Txt> : null}
-          <Row gap={10}>
-            <Button label="Accept" icon="checkmark" onPress={() => respond(i.id, true)} loading={busy === i.id} style={{ flex: 1 }} />
-            <Button label="Decline" tone="outline" onPress={() => respond(i.id, false)} disabled={busy === i.id} style={{ flex: 1 }} />
-          </Row>
-          <Txt variant="caption">Accepting shares your names and phone numbers with each other.</Txt>
+          {i.myTraveller && !i.myTraveller.idVerified ? (
+            <>
+              <Button
+                label={`Verify ${i.myTraveller.name.split(' ')[0]} to accept`}
+                icon="shield-checkmark"
+                tone="gold"
+                onPress={() => router.push(`/traveller/verify?id=${i.myTraveller!.id}`)}
+              />
+              <Txt variant="caption">Both travellers verify their identity before families are introduced.</Txt>
+              <Button label="Decline" tone="ghost" onPress={() => respond(i.id, false)} disabled={busy === i.id} />
+            </>
+          ) : (
+            <>
+              <Row gap={10}>
+                <Button label="Accept" icon="checkmark" onPress={() => respond(i.id, true)} loading={busy === i.id} style={{ flex: 1 }} />
+                <Button label="Decline" tone="outline" onPress={() => respond(i.id, false)} disabled={busy === i.id} style={{ flex: 1 }} />
+              </Row>
+              <Txt variant="caption">Accepting shares your names and phone numbers with each other.</Txt>
+            </>
+          )}
         </IntroCard>
       ))}
 

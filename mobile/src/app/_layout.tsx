@@ -56,6 +56,7 @@ function Navigator() {
         <Stack.Screen name="trip/[id]/companion" />
         <Stack.Screen name="traveller/edit" />
         <Stack.Screen name="traveller/pair" />
+        <Stack.Screen name="traveller/verify" />
       </Stack.Protected>
       <Stack.Protected guard={mode === 'parent'}>
         <Stack.Screen name="parent/index" />

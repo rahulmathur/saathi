@@ -95,6 +95,17 @@ export default function Account() {
             </View>
             {t.kind === 'helper' ? <Chip label="Helper" tone="teal" /> : null}
           </Row>
+          {t.idVerified ? (
+            <Chip label="ID verified" tone="teal" icon="shield-checkmark" />
+          ) : (
+            <Button
+              label={`Verify ${t.relation === 'Me' ? 'my' : `${t.name.split(' ')[0]}'s`} identity`}
+              icon="shield-checkmark"
+              tone="gold"
+              onPress={() => router.push(`/traveller/verify?id=${t.id}`)}
+              fontSize={15}
+            />
+          )}
           <Row gap={10}>
             <Button label="Edit" tone="outline" onPress={() => router.push(`/traveller/edit?id=${t.id}`)} style={{ flex: 1 }} />
             <Button label="Set up their phone" icon="phone-portrait" onPress={() => router.push(`/traveller/pair?id=${t.id}`)} style={{ flex: 1.4 }} fontSize={15} />

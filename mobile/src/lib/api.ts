@@ -4,6 +4,10 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
+    /** A machine-readable reason, e.g. 'verification_required'. */
+    public code?: string,
+    /** For 'verification_required': which traveller needs verifying. */
+    public travellerId?: string,
   ) {
     super(message);
   }
@@ -23,7 +27,7 @@ export async function request<T>(method: string, path: string, body?: unknown, t
   } catch {
     throw new ApiError('Could not reach Saathi. Please check your internet connection.', 0);
   }
-  const data = (await res.json().catch(() => ({}))) as { error?: string };
-  if (!res.ok) throw new ApiError(data.error ?? 'Something went wrong. Please try again.', res.status);
+  const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string; travellerId?: string };
+  if (!res.ok) throw new ApiError(data.error ?? 'Something went wrong. Please try again.', res.status, data.code, data.travellerId);
   return data as T;
 }

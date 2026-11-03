@@ -5,6 +5,7 @@ import { Avatar, Button, Card, Chip, ErrorBox, Header, Icon, Row, Screen, Txt } 
 import { matchCache } from '@/lib/contact';
 import { flightLabel, relationLabel } from '@/lib/format';
 import { useSession } from '@/lib/session';
+import { goVerifyIfRequired } from '@/lib/verification';
 import { colors } from '@/lib/theme';
 
 export default function CompanionProfile() {
@@ -31,7 +32,7 @@ export default function CompanionProfile() {
       await api('POST', `/trips/${id}/intros`, { toTripId: m!.tripId });
       setSent(true);
     } catch (e) {
-      setError((e as Error).message);
+      if (!goVerifyIfRequired(e)) setError((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -80,6 +81,9 @@ export default function CompanionProfile() {
         </Card>
       ) : null}
 
+      {!m.idVerified ? (
+        <Txt variant="small">{m.name.split(' ')[0]} hasn't verified their ID yet. They'll need to before an introduction can be accepted.</Txt>
+      ) : null}
       {error ? <ErrorBox message={error} /> : null}
       {m.intro?.status === 'accepted' ? (
         <Button label="Travelling together" icon="checkmark-circle" tone="success" onPress={() => router.push(`/trip/${id}`)} />

@@ -16,6 +16,9 @@ DEV_MODE = "true"
 # (needs the FLIGHTAWARE_API_KEY secret).
 FLIGHT_PROVIDER = "mock"
 EMAIL_FROM = "Saathi <hello@saathi.travel>"
+# Identity checks. "mock" is a built-in test page with pass/fail buttons;
+# switch to the real provider once one is added in src/verify.ts.
+VERIFY_PROVIDER = "mock"
 
 # Secrets (set with `wrangler secret put NAME`), all optional:
 #   RESEND_API_KEY      sends sign-in codes by email

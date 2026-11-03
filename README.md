@@ -96,7 +96,8 @@ Each one switches on when its secret is set (`npx wrangler secret put NAME`). Un
 
 ## Before real launch
 
+- Plug in a real ID-verification provider and switch off the test one: see [`docs/identity-verification.md`](docs/identity-verification.md).
+
 - Remove the sample travellers: `DELETE FROM users WHERE email LIKE 'sample+%@saathi.example';`
 - Set `DEV_MODE = "false"` once email is connected.
-- Decide and build the identity-verification step (the `id_verified` and `vouched_by` fields exist, but nothing sets them yet).
 - Have the privacy policy reviewed.

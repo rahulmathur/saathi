@@ -1,13 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { Avatar, Button, Card, Chip, ErrorBox, Header, Icon, Loading, Pill, Row, Screen, Txt } from '@/components/ui';
+import { Avatar, Banner, Button, Card, Chip, ErrorBox, Header, Icon, Loading, Pill, Row, Screen, Txt } from '@/components/ui';
 import { matchCache } from '@/lib/contact';
 import { city, flightLabel, relationLabel, shortDate } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { colors } from '@/lib/theme';
-import type { Match, Trip } from '@/lib/types';
+import type { Match, Traveller, Trip } from '@/lib/types';
 import { useLoad } from '@/lib/useLoad';
+import { goVerifyIfRequired } from '@/lib/verification';
 
 const FILTERS = [
   ['all', 'Everyone'],
@@ -21,7 +22,7 @@ export default function Matches() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [filter, setFilter] = useState<(typeof FILTERS)[number][0]>('all');
   const { data, error, loading, reload } = useLoad(async () => {
-    const r = await api<{ trip: Trip; matches: Match[] }>('GET', `/trips/${id}/matches?filter=${filter}`);
+    const r = await api<{ trip: Trip; traveller: Traveller; matches: Match[] }>('GET', `/trips/${id}/matches?filter=${filter}`);
     r.matches.forEach((m) => matchCache.set(m.tripId, m));
     return r;
   }, [api, id, filter]);
@@ -41,6 +42,17 @@ export default function Matches() {
             </Txt>
           </View>
         </Row>
+      ) : null}
+
+      {data && !data.traveller.idVerified ? (
+        <Banner icon="shield-checkmark">
+          <View style={{ gap: 10 }}>
+            <Txt style={{ color: colors.brownDeep }}>
+              Before families are introduced, both travellers verify their identity. Verify {data.traveller.name.split(' ')[0]} now so you're ready to ask.
+            </Txt>
+            <Button label={`Verify ${data.traveller.name.split(' ')[0]}`} tone="outline" onPress={() => router.push(`/traveller/verify?id=${data.traveller.id}`)} />
+          </View>
+        </Banner>
       ) : null}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
@@ -86,7 +98,7 @@ function MatchCard({ match: m, tripId, onChange }: { match: Match; tripId: strin
       await api('POST', `/trips/${tripId}/intros`, { toTripId: m.tripId });
       onChange();
     } catch (e) {
-      setError((e as Error).message);
+      if (!goVerifyIfRequired(e)) setError((e as Error).message);
     } finally {
       setBusy(false);
     }

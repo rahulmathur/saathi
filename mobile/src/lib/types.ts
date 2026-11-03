@@ -90,7 +90,7 @@ export interface Intro {
   message: string | null;
   createdAt: string;
   myTripId: string;
-  myTraveller: { name: string; relation: string | null } | null;
+  myTraveller: { id: string; name: string; relation: string | null; idVerified: boolean } | null;
   companion: Companion;
 }
 
@@ -132,4 +132,10 @@ export interface ParentHomeData {
   family: { name: string | null; phone: string | null; relation: string | null };
   trip: Trip | null;
   companions: Companion[];
+}
+
+export interface VerificationStatus {
+  verified: boolean;
+  testMode: boolean;
+  latest: { id: string; status: 'pending' | 'verified' | 'failed' | 'cancelled'; method: string | null; reason: string | null; startedAt: string; updatedAt: string } | null;
 }
