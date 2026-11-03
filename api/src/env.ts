@@ -10,6 +10,8 @@ export interface Env {
   FLIGHTAWARE_API_KEY?: string;
   ADMIN_TOKEN?: string;
   VERIFY_PROVIDER?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
 }
 
 export interface Session {

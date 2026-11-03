@@ -1,4 +1,5 @@
 import type { Env } from './env';
+import { isStripeSandbox, stripe } from './verify-stripe';
 
 /**
  * Identity verification, independent of any one provider. A provider sends
@@ -18,8 +19,8 @@ export interface VerificationProvider {
   name: string;
   /** Starts a check and returns the page to send the person to. */
   start(env: Env, args: { verificationId: string; travellerName: string; apiBase: string }): Promise<{ providerRef: string; url: string }>;
-  /** Reads a provider's callback. Returns null unless it is authentic. */
-  webhook(env: Env, req: Request): Promise<{ providerRef: string; result: VerificationResult } | null>;
+  /** Reads a provider's callback. Returns null unless it is authentic, 'ignore' for authentic events we don't act on. */
+  webhook(env: Env, req: Request): Promise<{ providerRef: string; result: VerificationResult } | 'ignore' | null>;
 }
 
 /** Built-in stand-in for testing: a page with "pass" and "fail" buttons. Never use with real users. */
@@ -38,9 +39,17 @@ export function providerFor(env: Env): VerificationProvider {
   switch (name) {
     case 'mock':
       return mock;
+    case 'stripe':
+      return stripe;
     default:
       throw new Error(`Unknown VERIFY_PROVIDER "${name}"`);
   }
+}
+
+/** True when checks are not real: the built-in test page, or a provider's sandbox keys. */
+export function isTestMode(env: Env): boolean {
+  const name = providerFor(env).name;
+  return name === 'mock' || (name === 'stripe' && isStripeSandbox(env));
 }
 
 /** Records a result; a passed check marks the traveller verified. */

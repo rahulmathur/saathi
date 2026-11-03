@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { requireFamily } from '../auth';
 import { ownedTraveller } from '../data';
 import type { AppEnv } from '../env';
-import { applyResult, providerFor } from '../verify';
+import { applyResult, isTestMode, providerFor } from '../verify';
 import { fail, newId, readBody, str } from '../util';
 
 /** Starting a check and reading its status, from the family app. */
@@ -19,10 +19,10 @@ interface VerificationRow {
   updated_at: string;
 }
 
-function verificationOut(v: VerificationRow | null, verified: boolean, provider: string) {
+function verificationOut(v: VerificationRow | null, verified: boolean, testMode: boolean) {
   return {
     verified,
-    testMode: provider === 'mock',
+    testMode,
     latest: v ? { id: v.id, status: v.status, method: v.method, reason: v.failure_reason, startedAt: v.created_at, updatedAt: v.updated_at } : null,
   };
 }
@@ -31,7 +31,7 @@ verificationFamily.get('/travellers/:id/verification', async (c) => {
   const { userId } = c.get('session');
   const t = await ownedTraveller(c.env.DB, userId, c.req.param('id'));
   const v = await c.env.DB.prepare('SELECT * FROM verifications WHERE traveller_id = ? ORDER BY created_at DESC LIMIT 1').bind(t.id).first<VerificationRow>();
-  return c.json(verificationOut(v, !!t.id_verified, providerFor(c.env).name));
+  return c.json(verificationOut(v, !!t.id_verified, isTestMode(c.env)));
 });
 
 verificationFamily.post('/travellers/:id/verification', async (c) => {
@@ -47,7 +47,7 @@ verificationFamily.post('/travellers/:id/verification', async (c) => {
     .prepare('INSERT INTO verifications (id, traveller_id, user_id, provider, provider_ref) VALUES (?, ?, ?, ?, ?)')
     .bind(id, t.id, userId, provider.name, providerRef)
     .run();
-  return c.json({ verificationId: id, url, testMode: provider.name === 'mock' }, 201);
+  return c.json({ verificationId: id, url, testMode: isTestMode(c.env) }, 201);
 });
 
 /** Provider callbacks and the built-in test page: no sign-in, each checked on its own terms. */
@@ -58,6 +58,7 @@ verificationPublic.post('/webhooks/verification/:provider', async (c) => {
   if (c.req.param('provider') !== provider.name) fail(404, 'Not found');
   const parsed = await provider.webhook(c.env, c.req.raw);
   if (!parsed) fail(401, 'Not a valid callback');
+  if (parsed === 'ignore') return c.json({ ok: true });
   const v = await c.env.DB.prepare('SELECT id FROM verifications WHERE provider = ? AND provider_ref = ?')
     .bind(provider.name, parsed.providerRef)
     .first<{ id: string }>();
@@ -70,6 +71,11 @@ const page = (title: string, body: string) => `<!doctype html><html lang="en"><h
 main{background:#fff;border:1px solid #E3E5EA;border-radius:22px;padding:28px;max-width:420px;display:grid;gap:16px}h1{margin:0;font-size:26px;color:#1C2B4F}
 .note{background:#FDF0D9;color:#4A2E00;border-radius:14px;padding:12px 14px;font-size:16px}button{font:inherit;font-weight:700;min-height:54px;border-radius:16px;border:0;width:100%;cursor:pointer}
 .pass{background:#1C2B4F;color:#fff}.fail{background:#fff;color:#1C2B4F;border:2px solid #1C2B4F}form{display:grid;gap:10px}</style></head><body><main>${body}</main></body></html>`;
+
+/** Where a provider's hosted page sends people when they finish. */
+verificationPublic.get('/verify/done', (c) =>
+  c.html(page('Saathi ID check', '<h1>Thank you</h1><p>Your check has been submitted. You can close this page and go back to Saathi, where the result will appear in a moment.</p>')),
+);
 
 function mockOnly(c: { env: AppEnv['Bindings'] }) {
   if (providerFor(c.env).name !== 'mock') fail(404, 'Not found');

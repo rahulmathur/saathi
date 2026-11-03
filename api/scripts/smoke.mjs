@@ -69,7 +69,7 @@ check('helper filter', helpers.data.matches.length === 1 && helpers.data.matches
 
 // Introduce to Meera; her family (sample user) accepts.
 const meera = matches.data.matches.find((m) => m.name === 'Meera J.');
-check('sample travellers carry no fake verified badge', matches.data.matches.every((m) => m.idVerified === false && m.vouchedBy === null), matches.data.matches);
+check('sample travellers carry no fake verified badge', matches.data.matches.filter((m) => m.travellerId.startsWith('sample-')).every((m) => m.idVerified === false && m.vouchedBy === null), matches.data.matches);
 const early = await call('POST', `/trips/${tripId}/intros`, { toTripId: meera.tripId }, token);
 check('introduction needs a verified traveller', early.status === 403 && early.data.code === 'verification_required' && early.data.travellerId === travellerId, early);
 

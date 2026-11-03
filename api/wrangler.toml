@@ -26,3 +26,5 @@ VERIFY_PROVIDER = "mock"
 #                       sends WhatsApp alerts to families
 #   FLIGHTAWARE_API_KEY live flight status
 #   ADMIN_TOKEN         protects /admin (survey results and story approval)
+#   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+#                       Stripe Identity checks (with VERIFY_PROVIDER = "stripe")

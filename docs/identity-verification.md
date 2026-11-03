@@ -29,7 +29,21 @@ The flow works like this:
 
 `VERIFY_PROVIDER = "mock"` in `api/wrangler.toml`. The "check" is a page with **Pass** and **Fail** buttons, and the app shows a test-mode notice. The test page and its endpoint return 404 as soon as any other provider is set.
 
-## Plugging in a real provider
+## Stripe Identity (built in)
+
+`api/src/verify-stripe.ts` connects Stripe Identity: a government photo ID plus a matching selfie on Stripe's hosted page.
+
+1. Store the API key as a Cloudflare secret: `STRIPE_SECRET_KEY` (`sk_test_…` for the sandbox, `sk_live_…` for real checks).
+2. In Stripe, go to **Developers → Webhooks** and add the endpoint `https://<api>/webhooks/verification/stripe` with these events:
+   - `identity.verification_session.verified`
+   - `identity.verification_session.requires_input`
+   - `identity.verification_session.canceled`
+3. Store that endpoint's signing secret as the Cloudflare secret `STRIPE_WEBHOOK_SECRET`.
+4. Set `VERIFY_PROVIDER = "stripe"` and deploy.
+
+With an `sk_test_` key, the app still shows its test-mode notice. Stripe's sandbox page lets you choose the outcome, and no real ID is needed.
+
+## Plugging in another provider
 
 1. Sign up with the provider (for example Didit, Stripe Identity, or an Indian DigiLocker provider such as Setu) and get API keys. DigiLocker itself only accepts Indian-registered organisations, so a US company goes through a provider.
 2. In `api/src/verify.ts`, write a `VerificationProvider`:
