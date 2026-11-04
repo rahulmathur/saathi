@@ -1,5 +1,9 @@
 (function () {
-  var override = new URLSearchParams(location.search).get('api');
+  // ?api= points the forms at a local API for testing. Only honour it when the
+  // page itself is open on this computer, so nobody can send a live-site link
+  // that quietly delivers visitors' form answers to their own server.
+  var isLocalPage = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  var override = isLocalPage ? new URLSearchParams(location.search).get('api') : null;
   var API = (override || window.SAATHI_API || '').replace(/\/$/, '');
 
   // Mobile menu
