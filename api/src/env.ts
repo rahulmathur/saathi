@@ -9,6 +9,7 @@ export interface Env {
   TWILIO_WHATSAPP_FROM?: string;
   FLIGHTAWARE_API_KEY?: string;
   ADMIN_TOKEN?: string;
+  ID_CHECK?: string;
   VERIFY_PROVIDER?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;

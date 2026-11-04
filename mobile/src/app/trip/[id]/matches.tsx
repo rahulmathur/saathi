@@ -8,7 +8,7 @@ import { useSession } from '@/lib/session';
 import { colors } from '@/lib/theme';
 import type { Match, Traveller, Trip } from '@/lib/types';
 import { useLoad } from '@/lib/useLoad';
-import { goVerifyIfRequired } from '@/lib/verification';
+import { goVerifyIfRequired, ID_CHECK_REQUIRED } from '@/lib/verification';
 
 const FILTERS = [
   ['all', 'Everyone'],
@@ -44,7 +44,7 @@ export default function Matches() {
         </Row>
       ) : null}
 
-      {data && !data.traveller.idVerified ? (
+      {ID_CHECK_REQUIRED && data && !data.traveller.idVerified ? (
         <Banner icon="shield-checkmark">
           <View style={{ gap: 10 }}>
             <Txt style={{ color: colors.brownDeep }}>

@@ -6,7 +6,7 @@ import { flightLabel, relationLabel, shortDate, timeAgo } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import type { Intro } from '@/lib/types';
 import { useLoad } from '@/lib/useLoad';
-import { goVerifyIfRequired } from '@/lib/verification';
+import { goVerifyIfRequired, ID_CHECK_REQUIRED } from '@/lib/verification';
 
 export default function Requests() {
   const { api } = useSession();
@@ -59,7 +59,7 @@ export default function Requests() {
       {pending.map((i) => (
         <IntroCard key={i.id} intro={i}>
           {i.message ? <Txt style={{ fontStyle: 'italic' }}>"{i.message}"</Txt> : null}
-          {i.myTraveller && !i.myTraveller.idVerified ? (
+          {ID_CHECK_REQUIRED && i.myTraveller && !i.myTraveller.idVerified ? (
             <>
               <Button
                 label={`Verify ${i.myTraveller.name.split(' ')[0]} to accept`}

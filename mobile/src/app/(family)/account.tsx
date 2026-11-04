@@ -5,6 +5,7 @@ import { Avatar, Banner, Button, Card, Chip, ErrorBox, Field, Row, Screen, Txt }
 import { useSession } from '@/lib/session';
 import type { Traveller, User } from '@/lib/types';
 import { useLoad } from '@/lib/useLoad';
+import { ID_CHECK_REQUIRED } from '@/lib/verification';
 
 export default function Account() {
   const { api, signOut } = useSession();
@@ -97,7 +98,7 @@ export default function Account() {
           </Row>
           {t.idVerified ? (
             <Chip label="ID verified" tone="teal" icon="shield-checkmark" />
-          ) : (
+          ) : ID_CHECK_REQUIRED ? (
             <Button
               label={`Verify ${t.relation === 'Me' ? 'my' : `${t.name.split(' ')[0]}'s`} identity`}
               icon="shield-checkmark"
@@ -105,7 +106,7 @@ export default function Account() {
               onPress={() => router.push(`/traveller/verify?id=${t.id}`)}
               fontSize={15}
             />
-          )}
+          ) : null}
           <Row gap={10}>
             <Button label="Edit" tone="outline" onPress={() => router.push(`/traveller/edit?id=${t.id}`)} style={{ flex: 1 }} />
             <Button label="Set up their phone" icon="phone-portrait" onPress={() => router.push(`/traveller/pair?id=${t.id}`)} style={{ flex: 1.4 }} fontSize={15} />

@@ -16,6 +16,10 @@ DEV_MODE = "true"
 # (needs the FLIGHTAWARE_API_KEY secret).
 FLIGHT_PROVIDER = "mock"
 EMAIL_FROM = "Saathi <hello@saathi.travel>"
+# "required" makes both travellers pass an ID check before families are
+# introduced. "off" (until the feature launches) skips the check and the API
+# refuses to start one, so nobody can mark themselves verified meanwhile.
+ID_CHECK = "off"
 # Identity checks. "mock" is a built-in test page with pass/fail buttons;
 # switch to the real provider once one is added in src/verify.ts.
 VERIFY_PROVIDER = "mock"

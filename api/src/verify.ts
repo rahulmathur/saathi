@@ -46,6 +46,11 @@ export function providerFor(env: Env): VerificationProvider {
   }
 }
 
+/** True when introductions need ID-checked travellers (ID_CHECK = "required"). Off unless set. */
+export function idCheckRequired(env: Env): boolean {
+  return env.ID_CHECK === 'required';
+}
+
 /** True when checks are not real: the built-in test page, or a provider's sandbox keys. */
 export function isTestMode(env: Env): boolean {
   const name = providerFor(env).name;

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { requireFamily } from '../auth';
 import { ownedTraveller } from '../data';
 import type { AppEnv } from '../env';
-import { applyResult, isTestMode, providerFor } from '../verify';
+import { applyResult, idCheckRequired, isTestMode, providerFor } from '../verify';
 import { fail, newId, readBody, str } from '../util';
 
 /** Starting a check and reading its status, from the family app. */
@@ -19,9 +19,10 @@ interface VerificationRow {
   updated_at: string;
 }
 
-function verificationOut(v: VerificationRow | null, verified: boolean, testMode: boolean) {
+function verificationOut(v: VerificationRow | null, verified: boolean, testMode: boolean, required: boolean) {
   return {
     verified,
+    required,
     testMode,
     latest: v ? { id: v.id, status: v.status, method: v.method, reason: v.failure_reason, startedAt: v.created_at, updatedAt: v.updated_at } : null,
   };
@@ -31,13 +32,14 @@ verificationFamily.get('/travellers/:id/verification', async (c) => {
   const { userId } = c.get('session');
   const t = await ownedTraveller(c.env.DB, userId, c.req.param('id'));
   const v = await c.env.DB.prepare('SELECT * FROM verifications WHERE traveller_id = ? ORDER BY created_at DESC LIMIT 1').bind(t.id).first<VerificationRow>();
-  return c.json(verificationOut(v, !!t.id_verified, isTestMode(c.env)));
+  return c.json(verificationOut(v, !!t.id_verified, isTestMode(c.env), idCheckRequired(c.env)));
 });
 
 verificationFamily.post('/travellers/:id/verification', async (c) => {
   const { userId } = c.get('session');
   const db = c.env.DB;
   const t = await ownedTraveller(db, userId, c.req.param('id'));
+  if (!idCheckRequired(c.env)) fail(403, "ID checks aren't available yet.");
   if (t.id_verified) fail(409, `${t.name.split(' ')[0]} is already verified`);
   const provider = providerFor(c.env);
   const id = newId();
@@ -78,7 +80,7 @@ verificationPublic.get('/verify/done', (c) =>
 );
 
 function mockOnly(c: { env: AppEnv['Bindings'] }) {
-  if (providerFor(c.env).name !== 'mock') fail(404, 'Not found');
+  if (!idCheckRequired(c.env) || providerFor(c.env).name !== 'mock') fail(404, 'Not found');
 }
 
 verificationPublic.get('/verify/mock/:id', async (c) => {

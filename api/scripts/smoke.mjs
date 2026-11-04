@@ -70,15 +70,22 @@ check('helper filter', helpers.data.matches.length === 1 && helpers.data.matches
 // Introduce to Meera; her family (sample user) accepts.
 const meera = matches.data.matches.find((m) => m.name === 'Meera J.');
 check('sample travellers carry no fake verified badge', matches.data.matches.filter((m) => m.travellerId.startsWith('sample-')).every((m) => m.idVerified === false && m.vouchedBy === null), matches.data.matches);
-const early = await call('POST', `/trips/${tripId}/intros`, { toTripId: meera.tripId }, token);
-check('introduction needs a verified traveller', early.status === 403 && early.data.code === 'verification_required' && early.data.travellerId === travellerId, early);
-
-// Verify Sushila through the built-in test provider.
+// ID_CHECK in wrangler.toml: "required" enforces checks; "off" (until launch) skips them.
+const ID_CHECK = (await call('GET', `/travellers/${travellerId}/verification`, null, token)).data.required === true;
+console.log(`      (ID checks ${ID_CHECK ? 'required' : 'off'})`);
 async function verifyTraveller(id, tok, result = 'verified') {
+  if (!ID_CHECK) return null;
   const start = await call('POST', `/travellers/${id}/verification`, null, tok);
   const done = await call('POST', `/verify/mock/${start.data.verificationId}`, { result });
   return { start, done, status: await call('GET', `/travellers/${id}/verification`, null, tok) };
 }
+if (!ID_CHECK) {
+  const off = await call('POST', `/travellers/${travellerId}/verification`, null, token);
+  check('ID check cannot be started while off', off.status === 403, off);
+  check('test verification page hidden while off', (await fetch(`${BASE}/verify/mock/anything`)).status === 404);
+} else {
+const early = await call('POST', `/trips/${tripId}/intros`, { toTripId: meera.tripId }, token);
+check('introduction needs a verified traveller', early.status === 403 && early.data.code === 'verification_required' && early.data.travellerId === travellerId, early);
 const v1start = await call('POST', `/travellers/${travellerId}/verification`, null, token);
 check('verification started in test mode', v1start.status === 201 && v1start.data.testMode === true && v1start.data.url.includes('/verify/mock/'), v1start);
 const mockPage = await fetch(v1start.data.url);
@@ -89,6 +96,7 @@ const v1 = await call('GET', `/travellers/${travellerId}/verification`, null, to
 check('traveller verified', v1.data.verified === true && v1.data.latest?.status === 'verified', v1.data);
 check('cannot start a second check once verified', (await call('POST', `/travellers/${travellerId}/verification`, null, token)).status === 409);
 check('other families cannot check my traveller', (await call('GET', `/travellers/${travellerId}/verification`, null, await signIn(`smoke3+${Date.now()}@example.com`))).status === 404);
+}
 
 const intro = await call('POST', `/trips/${tripId}/intros`, { toTripId: meera.tripId, message: 'Maa would love company on AI 101.' }, token);
 check('introduction requested', intro.status === 201, intro);
@@ -103,12 +111,14 @@ const trip2 = await call('POST', '/trips', { travellerId: t2.data.traveller.id, 
 const m2 = await call('GET', `/trips/${trip2.data.trip.id}/matches`, null, token2);
 const sushila = m2.data.matches.find((m) => m.name === 'Sushila S.');
 check('other family sees Sushila by first name only', !!sushila && sushila.contact === null, m2.data);
-check('unverified family cannot ask', (await call('POST', `/trips/${trip2.data.trip.id}/intros`, { toTripId: tripId }, token2)).status === 403);
-const failed = await verifyTraveller(t2.data.traveller.id, token2, 'failed');
-check('failed check leaves traveller unverified', failed.status.data.verified === false && failed.status.data.latest?.status === 'failed', failed.status.data);
+if (ID_CHECK) {
+  check('unverified family cannot ask', (await call('POST', `/trips/${trip2.data.trip.id}/intros`, { toTripId: tripId }, token2)).status === 403);
+  const failed = await verifyTraveller(t2.data.traveller.id, token2, 'failed');
+  check('failed check leaves traveller unverified', failed.status.data.verified === false && failed.status.data.latest?.status === 'failed', failed.status.data);
+}
 await verifyTraveller(t2.data.traveller.id, token2);
 const req2 = await call('POST', `/trips/${trip2.data.trip.id}/intros`, { toTripId: tripId }, token2);
-check('verified family can ask', req2.status === 201, req2);
+check(ID_CHECK ? 'verified family can ask' : 'family can ask without an ID check', req2.status === 201, req2);
 const intros = await call('GET', '/intros', null, token);
 check('incoming request listed', intros.data.incoming?.some((i) => i.id === req2.data.intro.id), intros.data);
 const notMine = await call('POST', `/intros/${req2.data.intro.id}/respond`, { accept: true }, token2);
@@ -119,7 +129,8 @@ const t4 = await call('POST', '/travellers', { name: 'Lata Rao', relation: 'Amma
 const trip4 = await call('POST', '/trips', { travellerId: t4.data.traveller.id, flightNumber: 'AI 101', flightDate: '2026-11-14', origin: 'DEL', destination: 'JFK', departTime: '02:10', arriveTime: '07:45' }, token4);
 const req4 = await call('POST', `/trips/${trip2.data.trip.id}/intros`, { toTripId: trip4.data.trip.id }, token2);
 const acc4 = await call('POST', `/intros/${req4.data.intro.id}/respond`, { accept: true }, token4);
-check('unverified family cannot accept', acc4.status === 403 && acc4.data.code === 'verification_required', acc4);
+if (ID_CHECK) check('unverified family cannot accept', acc4.status === 403 && acc4.data.code === 'verification_required', acc4);
+else check('family can accept without an ID check', acc4.status === 200 && acc4.data.intro?.status === 'accepted', acc4);
 await call('DELETE', '/me', null, token4);
 
 const acc = await call('POST', `/intros/${req2.data.intro.id}/respond`, { accept: true }, token);

@@ -1,5 +1,12 @@
 # Identity verification
 
+> **Currently off.** ID checks aren't launching for a while, so the requirement is switched off:
+>
+> - **API:** `ID_CHECK = "off"` in `api/wrangler.toml`. Introductions don't need a verified traveller, and `POST /travellers/:id/verification` and the test page refuse to start a check, so nobody can mark themselves verified in the meantime.
+> - **App:** the "Verify" prompts are hidden unless it's built with `EXPO_PUBLIC_ID_CHECK=required`.
+>
+> To launch, set `ID_CHECK = "required"`, build the app with `EXPO_PUBLIC_ID_CHECK=required`, and deploy both together. `node scripts/smoke.mjs` reads the API's setting and tests whichever mode is on. The rest of this page describes the feature as it works when switched on.
+
 Before families are introduced, both travellers must pass an ID check.
 
 - **Asking for an introduction** requires the asking family's traveller to be verified.

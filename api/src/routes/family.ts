@@ -7,6 +7,7 @@ import { passesFilter, relation, score, sharedLanguages, type MatchFilter } from
 import { addEvent, tellFamily } from '../notify';
 import { normaliseFlightNumber, parseBooking } from '../parse';
 import { AIRPORT_RE, TIME_RE, bool, fail, int, isValidDate, newId, nowIso, parseLanguages, readBody, str, strList } from '../util';
+import { idCheckRequired } from '../verify';
 
 export const family = new Hono<AppEnv>();
 family.use('*', requireFamily);
@@ -343,7 +344,7 @@ family.post('/trips/:id/intros', async (c) => {
   if (!target || !target.seeking) fail(404, 'That traveller is no longer looking for company');
   if (target.owner_user_id === userId) fail(400, 'That is one of your own trips');
   if (!relation(forMatch(trip), forMatch(target))) fail(400, 'These trips are not close enough to travel together');
-  if (!traveller.id_verified) return verificationRequired(c, traveller, 'asking for an introduction');
+  if (idCheckRequired(c.env) && !traveller.id_verified) return verificationRequired(c, traveller, 'asking for an introduction');
 
   // If they already asked us, saying yes is the same as accepting their request.
   const reverse = await db
@@ -475,7 +476,7 @@ family.post('/intros/:id/respond', async (c) => {
     .first<{ id: string; status: string; from_trip_id: string }>();
   if (!r) fail(404, 'Request not found');
   if (r.status !== 'pending') fail(409, `This request is already ${r.status}`);
-  if (accept) {
+  if (accept && idCheckRequired(c.env)) {
     const mine = await db
       .prepare('SELECT tr.id, tr.name, tr.id_verified FROM intro_requests i JOIN trips t ON t.id = i.to_trip_id JOIN travellers tr ON tr.id = t.traveller_id WHERE i.id = ?')
       .bind(r.id)

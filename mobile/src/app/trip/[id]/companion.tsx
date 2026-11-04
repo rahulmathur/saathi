@@ -5,7 +5,7 @@ import { Avatar, Button, Card, Chip, ErrorBox, Header, Icon, Row, Screen, Txt } 
 import { matchCache } from '@/lib/contact';
 import { flightLabel, relationLabel } from '@/lib/format';
 import { useSession } from '@/lib/session';
-import { goVerifyIfRequired } from '@/lib/verification';
+import { goVerifyIfRequired, ID_CHECK_REQUIRED } from '@/lib/verification';
 import { colors } from '@/lib/theme';
 
 export default function CompanionProfile() {
@@ -81,7 +81,7 @@ export default function CompanionProfile() {
         </Card>
       ) : null}
 
-      {!m.idVerified ? (
+      {ID_CHECK_REQUIRED && !m.idVerified ? (
         <Txt variant="small">{m.name.split(' ')[0]} hasn't verified their ID yet. They'll need to before an introduction can be accepted.</Txt>
       ) : null}
       {error ? <ErrorBox message={error} /> : null}
