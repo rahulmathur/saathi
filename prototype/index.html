@@ -333,9 +333,15 @@ function render(){
   const ph=document.getElementById('phone');
   ph.className='phone'+(['parent','journey'].includes(S.screen)?' white':'')+(S.xl?' xl':'');
   ph.innerHTML=V[S.screen]();
-  const mk=g=>SCREENS.filter(s=>s[2]===g).map(([id,l])=>`<button class="jump ${S.screen===id?'on':''}" onclick="go('${id}')">${l}</button>`).join('');
-  document.getElementById('jumpsFamily').innerHTML=mk('f');
-  document.getElementById('jumpsParent').innerHTML=mk('p');
+  const mk=(el,g)=>el.replaceChildren(...SCREENS.filter(s=>s[2]===g).map(([id,l])=>{
+    const b=document.createElement('button');
+    b.className='jump'+(S.screen===id?' on':'');
+    b.textContent=l;
+    b.addEventListener('click',()=>go(id));
+    return b;
+  }));
+  mk(document.getElementById('jumpsFamily'),'f');
+  mk(document.getElementById('jumpsParent'),'p');
   document.getElementById('szL').className=S.xl?'':'on';
   document.getElementById('szXL').className=S.xl?'on':'';
 }
